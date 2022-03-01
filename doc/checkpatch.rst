@@ -32,10 +32,6 @@ Available options:
    Enable verbose mode.  Additional verbose test descriptions are output
    so as to provide information on why that particular message is shown.
 
- - --no-tree
-
-   Run checkpatch without the kernel tree.
-
  - --no-signoff
 
    Disable the 'Signed-off-by' line check.  The sign-off is a simple line at
@@ -133,20 +129,9 @@ Available options:
    a WARNING is emitted.  While a milder CHECK is emitted for files.  So for
    file contexts, the --strict flag must also be enabled.
 
- - --min-conf-desc-length=n
-
-   Set the Kconfig entry minimum description length, if shorter, warn.
-
  - --tab-size=n
 
    Set the number of spaces for tab (default 8).
-
- - --root=PATH
-
-   PATH to the kernel tree root.
-
-   This option must be specified when invoking checkpatch from outside
-   the kernel root.
 
  - --no-summary
 
@@ -201,10 +186,6 @@ Available options:
 
    Use colors 'always', 'never', or only when output is a terminal ('auto').
    Default is 'auto'.
-
- - --kconfig-prefix=WORD
-
-   Use WORD as a prefix for Kconfig symbols (default is `CONFIG_`).
 
  - -h, --help, --version
 
@@ -262,215 +243,14 @@ Allocation style
 
     See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
 
-  **ALLOC_WITH_MULTIPLY**
-    Prefer kmalloc_array/kcalloc over kmalloc/kzalloc with a
-    sizeof multiply.
-
-    See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
-
 
 API usage
 ---------
-
-  **ARCH_DEFINES**
-    Architecture specific defines should be avoided wherever
-    possible.
-
-  **ARCH_INCLUDE_LINUX**
-    Whenever asm/file.h is included and linux/file.h exists, a
-    conversion can be made when linux/file.h includes asm/file.h.
-    However this is not always the case (See signal.h).
-    This message type is emitted only for includes from arch/.
-
-  **AVOID_BUG**
-    BUG() or BUG_ON() should be avoided totally.
-    Use WARN() and WARN_ON() instead, and handle the "impossible"
-    error condition as gracefully as possible.
-
-    See: https://www.kernel.org/doc/html/latest/process/deprecated.html#bug-and-bug-on
-
-  **CONSIDER_KSTRTO**
-    The simple_strtol(), simple_strtoll(), simple_strtoul(), and
-    simple_strtoull() functions explicitly ignore overflows, which
-    may lead to unexpected results in callers.  The respective kstrtol(),
-    kstrtoll(), kstrtoul(), and kstrtoull() functions tend to be the
-    correct replacements.
-
-    See: https://www.kernel.org/doc/html/latest/process/deprecated.html#simple-strtol-simple-strtoll-simple-strtoul-simple-strtoull
-
-  **CONSTANT_CONVERSION**
-    Use of __constant_<foo> form is discouraged for the following functions::
-
-      __constant_cpu_to_be[x]
-      __constant_cpu_to_le[x]
-      __constant_be[x]_to_cpu
-      __constant_le[x]_to_cpu
-      __constant_htons
-      __constant_ntohs
-
-    Using any of these outside of include/uapi/ is not preferred as using the
-    function without __constant_ is identical when the argument is a
-    constant.
-
-    In big endian systems, the macros like __constant_cpu_to_be32(x) and
-    cpu_to_be32(x) expand to the same expression::
-
-      #define __constant_cpu_to_be32(x) ((__force __be32)(__u32)(x))
-      #define __cpu_to_be32(x)          ((__force __be32)(__u32)(x))
-
-    In little endian systems, the macros __constant_cpu_to_be32(x) and
-    cpu_to_be32(x) expand to __constant_swab32 and __swab32.  __swab32
-    has a __builtin_constant_p check::
-
-      #define __swab32(x)				\
-        (__builtin_constant_p((__u32)(x)) ?	\
-        ___constant_swab32(x) :			\
-        __fswab32(x))
-
-    So ultimately they have a special case for constants.
-    Similar is the case with all of the macros in the list.  Thus
-    using the __constant_... forms are unnecessarily verbose and
-    not preferred outside of include/uapi.
-
-    See: https://lore.kernel.org/lkml/1400106425.12666.6.camel@joe-AO725/
-
-  **DEPRECATED_API**
-    Usage of a deprecated RCU API is detected.  It is recommended to replace
-    old flavourful RCU APIs by their new vanilla-RCU counterparts.
-
-    The full list of available RCU APIs can be viewed from the kernel docs.
-
-    See: https://www.kernel.org/doc/html/latest/RCU/whatisRCU.html#full-list-of-rcu-apis
-
-  **DEPRECATED_VARIABLE**
-    EXTRA_{A,C,CPP,LD}FLAGS are deprecated and should be replaced by the new
-    flags added via commit f77bf01425b1 ("kbuild: introduce ccflags-y,
-    asflags-y and ldflags-y").
-
-    The following conversion scheme maybe used::
-
-      EXTRA_AFLAGS    ->  asflags-y
-      EXTRA_CFLAGS    ->  ccflags-y
-      EXTRA_CPPFLAGS  ->  cppflags-y
-      EXTRA_LDFLAGS   ->  ldflags-y
-
-    See:
-
-      1. https://lore.kernel.org/lkml/20070930191054.GA15876@uranus.ravnborg.org/
-      2. https://lore.kernel.org/lkml/1313384834-24433-12-git-send-email-lacombar@gmail.com/
-      3. https://www.kernel.org/doc/html/latest/kbuild/makefiles.html#compilation-flags
-
-  **DEVICE_ATTR_FUNCTIONS**
-    The function names used in DEVICE_ATTR is unusual.
-    Typically, the store and show functions are used with <attr>_store and
-    <attr>_show, where <attr> is a named attribute variable of the device.
-
-    Consider the following examples::
-
-      static DEVICE_ATTR(type, 0444, type_show, NULL);
-      static DEVICE_ATTR(power, 0644, power_show, power_store);
-
-    The function names should preferably follow the above pattern.
-
-    See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
-
-  **DEVICE_ATTR_RO**
-    The DEVICE_ATTR_RO(name) helper macro can be used instead of
-    DEVICE_ATTR(name, 0444, name_show, NULL);
-
-    Note that the macro automatically appends _show to the named
-    attribute variable of the device for the show method.
-
-    See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
-
-  **DEVICE_ATTR_RW**
-    The DEVICE_ATTR_RW(name) helper macro can be used instead of
-    DEVICE_ATTR(name, 0644, name_show, name_store);
-
-    Note that the macro automatically appends _show and _store to the
-    named attribute variable of the device for the show and store methods.
-
-    See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
-
-  **DEVICE_ATTR_WO**
-    The DEVICE_AATR_WO(name) helper macro can be used instead of
-    DEVICE_ATTR(name, 0200, NULL, name_store);
-
-    Note that the macro automatically appends _store to the
-    named attribute variable of the device for the store method.
-
-    See: https://www.kernel.org/doc/html/latest/driver-api/driver-model/device.html#attributes
-
-  **DUPLICATED_SYSCTL_CONST**
-    Commit d91bff3011cf ("proc/sysctl: add shared variables for range
-    check") added some shared const variables to be used instead of a local
-    copy in each source file.
-
-    Consider replacing the sysctl range checking value with the shared
-    one in include/linux/sysctl.h.  The following conversion scheme may
-    be used::
-
-      &zero     ->  SYSCTL_ZERO
-      &one      ->  SYSCTL_ONE
-      &int_max  ->  SYSCTL_INT_MAX
-
-    See:
-
-      1. https://lore.kernel.org/lkml/20190430180111.10688-1-mcroce@redhat.com/
-      2. https://lore.kernel.org/lkml/20190531131422.14970-1-mcroce@redhat.com/
-
-  **ENOSYS**
-    ENOSYS means that a nonexistent system call was called.
-    Earlier, it was wrongly used for things like invalid operations on
-    otherwise valid syscalls.  This should be avoided in new code.
-
-    See: https://lore.kernel.org/lkml/5eb299021dec23c1a48fa7d9f2c8b794e967766d.1408730669.git.luto@amacapital.net/
-
-  **ENOTSUPP**
-    ENOTSUPP is not a standard error code and should be avoided in new patches.
-    EOPNOTSUPP should be used instead.
-
-    See: https://lore.kernel.org/netdev/20200510182252.GA411829@lunn.ch/
-
-  **EXPORT_SYMBOL**
-    EXPORT_SYMBOL should immediately follow the symbol to be exported.
-
-  **IN_ATOMIC**
-    in_atomic() is not for driver use so any such use is reported as an ERROR.
-    Also in_atomic() is often used to determine if sleeping is permitted,
-    but it is not reliable in this use model.  Therefore its use is
-    strongly discouraged.
-
-    However, in_atomic() is ok for core kernel use.
-
-    See: https://lore.kernel.org/lkml/20080320201723.b87b3732.akpm@linux-foundation.org/
-
-  **LOCKDEP**
-    The lockdep_no_validate class was added as a temporary measure to
-    prevent warnings on conversion of device->sem to device->mutex.
-    It should not be used for any other purpose.
-
-    See: https://lore.kernel.org/lkml/1268959062.9440.467.camel@laptop/
 
   **MALFORMED_INCLUDE**
     The #include statement has a malformed path.  This has happened
     because the author has included a double slash "//" in the pathname
     accidentally.
-
-  **USE_LOCKDEP**
-    lockdep_assert_held() annotations should be preferred over
-    assertions based on spin_is_locked()
-
-    See: https://www.kernel.org/doc/html/latest/locking/lockdep-design.html#annotations
-
-  **UAPI_INCLUDE**
-    No #include statements in include/uapi should use a uapi/ path.
-
-  **USLEEP_RANGE**
-    usleep_range() should be preferred over udelay(). The proper way of
-    using usleep_range() is mentioned in the kernel docs.
-
-    See: https://www.kernel.org/doc/html/latest/timers/timers-howto.html#delays-information-on-the-various-kernel-delay-sleep-mechanisms
 
 
 Comments
@@ -500,21 +280,6 @@ Comments
 
     See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
 
-  **DATA_RACE**
-    Applications of data_race() should have a comment so as to document the
-    reasoning behind why it was deemed safe.
-
-    See: https://lore.kernel.org/lkml/20200401101714.44781-1-elver@google.com/
-
-  **FSF_MAILING_ADDRESS**
-    Kernel maintainers reject new instances of the GPL boilerplate paragraph
-    directing people to write to the FSF for a copy of the GPL, since the
-    FSF has moved in the past and may do so again.
-    So do not write paragraphs about writing to the Free Software Foundation's
-    mailing address.
-
-    See: https://lore.kernel.org/lkml/20131006222342.GT19510@leaf/
-
 
 Commit message
 --------------
@@ -524,17 +289,6 @@ Commit message
     specified by the community.
 
     See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
-
-  **BAD_STABLE_ADDRESS_STYLE**
-    The email format for stable is incorrect.
-    Some valid options for stable address are::
-
-      1. stable@vger.kernel.org
-      2. stable@kernel.org
-
-    For adding version info, the following comment style should be used::
-
-      stable@vger.kernel.org # version info
 
   **COMMIT_COMMENT_SYMBOL**
     Commit log lines starting with a '#' are ignored by git as
@@ -633,10 +387,6 @@ Comparison style
 
     See: https://lore.kernel.org/lkml/1365563834.27174.12.camel@joe-AO722/
 
-  **COMPARISON_TO_NULL**
-    Comparisons to NULL in the form (foo == NULL) or (foo != NULL)
-    are better written as (!foo) and (foo).
-
   **CONSTANT_COMPARISON**
     Comparisons with a constant or upper case identifier on the left
     side of the test should be avoided.
@@ -710,12 +460,6 @@ Indentation and Line Breaks
 
     See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
 
-  **SPLIT_STRING**
-    Quoted strings that appear as messages in userspace and can be
-    grepped, should not be split across multiple lines.
-
-    See: https://lore.kernel.org/lkml/20120203052727.GA15035@leaf/
-
   **MULTILINE_DEREFERENCE**
     A single dereferencing identifier spanned on multiple lines like::
 
@@ -772,32 +516,6 @@ Macros, Attributes and Symbols
     Function prototypes don't need to be declared extern in .h
     files.  It's assumed by the compiler and is unnecessary.
 
-  **AVOID_L_PREFIX**
-    Local symbol names that are prefixed with `.L` should be avoided,
-    as this has special meaning for the assembler; a symbol entry will
-    not be emitted into the symbol table.  This can prevent `objtool`
-    from generating correct unwind info.
-
-    Symbols with STB_LOCAL binding may still be used, and `.L` prefixed
-    local symbol names are still generally usable within a function,
-    but `.L` prefixed local symbol names should not be used to denote
-    the beginning or end of code regions via
-    `SYM_CODE_START_LOCAL`/`SYM_CODE_END`
-
-  **BIT_MACRO**
-    Defines like: 1 << <digit> could be BIT(digit).
-    The BIT() macro is defined via include/linux/bits.h::
-
-      #define BIT(nr)         (1UL << (nr))
-
-  **CONST_READ_MOSTLY**
-    When a variable is tagged with the __read_mostly annotation, it is a
-    signal to the compiler that accesses to the variable will be mostly
-    reads and rarely(but NOT never) a write.
-
-    const __read_mostly does not make any sense as const data is already
-    read-only.  The __read_mostly annotation thus should be removed.
-
   **DATE_TIME**
     It is generally desirable that building the same source code with
     the same set of tools is reproducible, i.e. the output is always
@@ -809,26 +527,8 @@ Macros, Attributes and Symbols
 
     See: https://www.kernel.org/doc/html/latest/kbuild/reproducible-builds.html#timestamps
 
-  **DEFINE_ARCH_HAS**
-    The ARCH_HAS_xyz and ARCH_HAVE_xyz patterns are wrong.
-
-    For big conceptual features use Kconfig symbols instead.  And for
-    smaller things where we have compatibility fallback functions but
-    want architectures able to override them with optimized ones, we
-    should either use weak functions (appropriate for some cases), or
-    the symbol that protects them should be the same symbol we use.
-
-    See: https://lore.kernel.org/lkml/CA+55aFycQ9XJvEOsiM3txHL5bjUc8CeKWJNR_H+MiicaddB42Q@mail.gmail.com/
-
   **DO_WHILE_MACRO_WITH_TRAILING_SEMICOLON**
     do {} while(0) macros should not have a trailing semicolon.
-
-  **INIT_ATTRIBUTE**
-    Const init definitions should use __initconst instead of
-    __initdata.
-
-    Similarly init definitions without const require a separate
-    use of const.
 
   **INLINE_LOCATION**
     The inline keyword should sit between storage class and type.
@@ -846,20 +546,6 @@ Macros, Attributes and Symbols
       {
               ...
       }
-
-  **MISPLACED_INIT**
-    It is possible to use section markers on variables in a way
-    which gcc doesn't understand (or at least not the way the
-    developer intended)::
-
-      static struct __initdata samsung_pll_clock exynos4_plls[nr_plls] = {
-
-    does not put exynos4_plls in the .initdata section. The __initdata
-    marker can be virtually anywhere on the line, except right after
-    "struct". The preferred location is before the "=" sign if there is
-    one, or before the trailing ";" otherwise.
-
-    See: https://lore.kernel.org/lkml/1377655732.3619.19.camel@joe-AO722/
 
   **MULTISTATEMENT_MACRO_USE_DO_WHILE**
     Macros with multiple statements should be enclosed in a
@@ -918,24 +604,9 @@ Macros, Attributes and Symbols
 Functions and Variables
 -----------------------
 
-  **CAMELCASE**
-    Avoid CamelCase Identifiers.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#naming
-
   **CONST_CONST**
     Using `const <type> const *` is generally meant to be
     written `const <type> * const`.
-
-  **CONST_STRUCT**
-    Using const is generally a good idea.  Checkpatch reads
-    a list of frequently used structs that are always or
-    almost always constant.
-
-    The existing structs list can be viewed from
-    `scripts/const_structs.checkpatch`.
-
-    See: https://lore.kernel.org/lkml/alpine.DEB.2.10.1608281509480.3321@hadrien/
 
   **EMBEDDED_FUNCTION_NAME**
     Embedded function names are less appropriate to use as
@@ -1003,25 +674,9 @@ Functions and Variables
 Permissions
 -----------
 
-  **DEVICE_ATTR_PERMS**
-    The permissions used in DEVICE_ATTR are unusual.
-    Typically only three permissions are used - 0644 (RW), 0444 (RO)
-    and 0200 (WO).
-
-    See: https://www.kernel.org/doc/html/latest/filesystems/sysfs.html#attributes
-
   **EXECUTE_PERMISSIONS**
     There is no reason for source files to be executable.  The executable
     bit can be removed safely.
-
-  **EXPORTED_WORLD_WRITABLE**
-    Exporting world writable sysfs/debugfs files is usually a bad thing.
-    When done arbitrarily they can introduce serious security bugs.
-    In the past, some of the debugfs vulnerabilities would seemingly allow
-    any local user to write arbitrary values into device registers - a
-    situation from which little good can be expected to emerge.
-
-    See: https://lore.kernel.org/linux-arm-kernel/cover.1296818921.git.segoon@openwall.com/
 
   **NON_OCTAL_PERMISSIONS**
     Permission bits should use 4 digit octal permissions (like 0700 or 0444).
@@ -1145,17 +800,7 @@ Spacing and Brackets
 
           foo->bar();
 
-      2. Comparisons in if::
-
-          if ((foo->bar) && (foo->baz))
-          if ((foo == bar))
-
-        could be::
-
-          if (foo->bar && foo->baz)
-          if (foo == bar)
-
-      3. addressof/dereference single Lvalues::
+      2. addressof/dereference single Lvalues::
 
           &(foo->bar)
           *(foo->bar)
@@ -1178,18 +823,9 @@ Spacing and Brackets
 Others
 ------
 
-  **CONFIG_DESCRIPTION**
-    Kconfig symbols should have a help text which fully describes
-    it.
-
   **CORRUPTED_PATCH**
     The patch seems to be corrupted or lines are wrapped.
     Please regenerate the patch file before sending it to the maintainer.
-
-  **CVS_KEYWORD**
-    Since linux moved to git, the CVS markers are no longer used.
-    So, CVS style keywords ($Id$, $Revision$, $Log$) should not be
-    added.
 
   **DEFAULT_NO_BREAK**
     switch default case is sometimes written as "default:;".  This can
@@ -1202,30 +838,9 @@ Others
     For DOS-formatted patches, there are extra ^M symbols at the end of
     the line.  These should be removed.
 
-  **DT_SCHEMA_BINDING_PATCH**
-    DT bindings moved to a json-schema based format instead of
-    freeform text.
-
-    See: https://www.kernel.org/doc/html/latest/devicetree/bindings/writing-schema.html
-
-  **DT_SPLIT_BINDING_PATCH**
-    Devicetree bindings should be their own patch.  This is because
-    bindings are logically independent from a driver implementation,
-    they have a different maintainer (even though they often
-    are applied via the same tree), and it makes for a cleaner history in the
-    DT only tree created with git-filter-branch.
-
-    See: https://www.kernel.org/doc/html/latest/devicetree/bindings/submitting-patches.html#i-for-patch-submitters
-
   **EMBEDDED_FILENAME**
     Embedding the complete filename path inside the file isn't particularly
     useful as often the path is moved around and becomes incorrect.
-
-  **FILE_PATH_CHANGES**
-    Whenever files are added, moved, or deleted, the MAINTAINERS file
-    patterns can be out of sync or outdated.
-
-    So MAINTAINERS might need updating in these cases.
 
   **MEMSET**
     The memset use appears to be incorrect.  This may be caused due to
@@ -1237,13 +852,6 @@ Others
 
   **PRINTF_0XDECIMAL**
     Prefixing 0x with decimal output is defective and should be corrected.
-
-  **SPDX_LICENSE_TAG**
-    The source file is missing or has an improper SPDX identifier tag.
-    The Linux kernel requires the precise SPDX identifier in all source files,
-    and it is thoroughly documented in the kernel docs.
-
-    See: https://www.kernel.org/doc/html/latest/process/license-rules.html
 
   **TYPO_SPELLING**
     Some words may have been misspelled.  Consider reviewing them.
