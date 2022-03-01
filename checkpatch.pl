@@ -608,16 +608,17 @@ our @modifierList = (
 our @modifierListFile = ();
 
 our @mode_permission_funcs = (
-	["module_param", 3],
-	["module_param_(?:array|named|string)", 4],
-	["module_param_array_named", 5],
-	["debugfs_create_(?:file|u8|u16|u32|u64|x8|x16|x32|x64|size_t|atomic_t|bool|blob|regset32|u32_array)", 2],
-	["proc_create(?:_data|)", 2],
-	["(?:CLASS|DEVICE|SENSOR|SENSOR_DEVICE|IIO_DEVICE)_ATTR", 2],
-	["IIO_DEV_ATTR_[A-Z_]+", 1],
-	["SENSOR_(?:DEVICE_|)ATTR_2", 2],
-	["SENSOR_TEMPLATE(?:_2|)", 3],
-	["__ATTR", 2],
+	["creat", 2],
+	["open", 3],
+	["openat", 4],
+	["mkdir", 2],
+	["mkdirat", 3],
+	["chmod", 2],
+	["fchmod", 2],
+	["fchmodat", 3],
+	["coio_file_open", 3],
+	["coio_mkdir", 2],
+	["coio_chmod", 2],
 );
 
 my $word_pattern = '\b[A-Z]?[a-z]{2,}\b';
@@ -4735,10 +4736,6 @@ sub process {
 
 # Mode permission misuses where it seems decimal should be octal
 # This uses a shortcut match to avoid unnecessary uses of a slow foreach loop
-# o Ignore module_param*(...) uses with a decimal 0 permission as that has a
-#   specific definition of not visible in sysfs.
-# o Ignore proc_create*(...) uses with a decimal 0 permission as that means
-#   use the default permissions
 		if ($perl_version_ok &&
 		    defined $stat &&
 		    $line =~ /$mode_perms_search/) {
@@ -4759,8 +4756,7 @@ sub process {
 				if ($stat =~ /$test/) {
 					my $val = $1;
 					$val = $6 if ($skip_args ne "");
-					if (!($func =~ /^(?:module_param|proc_create)/ && $val eq "0") &&
-					    (($val =~ /^$Int$/ && $val !~ /^$Octal$/) ||
+					if ((($val =~ /^$Int$/ && $val !~ /^$Octal$/) ||
 					     ($val =~ /^$Octal$/ && length($val) ne 4))) {
 						ERROR("NON_OCTAL_PERMISSIONS",
 						      "Use 4 digit octal (0777) not decimal permissions\n" . "$here\n" . $stat_real);
