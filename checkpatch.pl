@@ -383,32 +383,18 @@ our $Storage	= qr{extern|static};
 our $Attribute	= qr{
 			const|
 			volatile|
-			__percpu|
-			__nocast|
-			__safe|
-			__bitwise|
-			__packed__|
-			__packed2__|
-			__naked|
-			__maybe_unused|
-			__always_unused|
-			__noreturn|
-			__used|
-			__cold|
-			__pure|
-			__noclone|
-			__deprecated|
-			__read_mostly|
-			__ro_after_init|
-			__kprobes|
-			____cacheline_aligned|
-			____cacheline_aligned_in_smp|
-			____cacheline_internodealigned_in_smp|
-			__weak|
-			__alloc_size\s*\(\s*\d+\s*(?:,\s*\d+\s*)?\)
+			alignas|
+			API_EXPORT|
+			CFORMAT|
+			DEPREACTED|
+			FALLTHROUGH|
+			MAYBE_UNUSED|
+			NODISCARD|
+			NORETURN|
+			PACKED
 		  }x;
 our $Modifier;
-our $Inline	= qr{inline|__always_inline|noinline|__inline|__inline__};
+our $Inline	= qr{inline|NOINLINE};
 our $Member	= qr{->$Ident|\.$Ident|\[[^]]*\]};
 our $Lval	= qr{$Ident(?:$Member)*};
 
@@ -4465,29 +4451,15 @@ sub process {
 			$attr =~ s/\s*\(\s*(.*)\)\s*/$1/;
 
 			my %attr_list = (
-				"alias"				=> "__alias",
-				"aligned"			=> "__aligned",
-				"always_inline"			=> "__always_inline",
-				"assume_aligned"		=> "__assume_aligned",
-				"cold"				=> "__cold",
-				"const"				=> "__attribute_const__",
-				"copy"				=> "__copy",
-				"designated_init"		=> "__designated_init",
-				"externally_visible"		=> "__visible",
-				"format"			=> "printf|scanf",
-				"gnu_inline"			=> "__gnu_inline",
-				"malloc"			=> "__malloc",
-				"mode"				=> "__mode",
-				"no_caller_saved_registers"	=> "__no_caller_saved_registers",
-				"noclone"			=> "__noclone",
-				"noinline"			=> "noinline",
-				"nonstring"			=> "__nonstring",
-				"noreturn"			=> "__noreturn",
-				"packed"			=> "__packed",
-				"pure"				=> "__pure",
-				"section"			=> "__section",
-				"used"				=> "__used",
-				"weak"				=> "__weak"
+				"aligned"			=> "alignas",
+				"format"			=> "CFORMAT",
+				"deprecated"			=> "DEPREACTED",
+				"fallthrough"			=> "FALLTHROUGH",
+				"nodiscard"			=> "NODISCARD",
+				"noinline"			=> "NOINLINE",
+				"noreturn"			=> "NORETURN",
+				"packed"			=> "PACKED",
+				"unused"			=> "MAYBE_UNUSED"
 			);
 
 			while ($attr =~ /\s*(\w+)\s*(${balanced_parens})?/g) {
@@ -4507,12 +4479,6 @@ sub process {
 					ERROR("PREFER_DEFINED_ATTRIBUTE_MACRO",
 					      "Prefer $new over __attribute__(($orig_attr$params))\n" . $herecurr);
 				}
-			}
-
-			# Check for __attribute__ unused, prefer __always_unused or __maybe_unused
-			if ($attr =~ /^_*unused/) {
-				ERROR("PREFER_DEFINED_ATTRIBUTE_MACRO",
-				      "__always_unused or __maybe_unused is preferred over __attribute__((__unused__))\n" . $herecurr);
 			}
 		}
 
@@ -4704,7 +4670,7 @@ sub process {
 			foreach my $ft (@fallthroughs) {
 				if ($raw_comment =~ /$ft/) {
 					ERROR("PREFER_FALLTHROUGH",
-					      "Prefer 'fallthrough;' over fallthrough comment\n" . $herecurr);
+					      "Prefer 'FALLTHROUGH;' over fallthrough comment\n" . $herecurr);
 					last;
 				}
 			}

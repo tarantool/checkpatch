@@ -462,7 +462,7 @@ Macros, Attributes and Symbols
         } while (0)
 
   **PREFER_FALLTHROUGH**
-    Use the `fallthrough;` pseudo keyword instead of
+    Use the `FALLTHROUGH;` pseudo keyword instead of
     `/* fallthrough */` like comments.
 
   **TRAILING_SEMICOLON**
