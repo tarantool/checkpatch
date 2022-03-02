@@ -475,13 +475,12 @@ our $logFunctions = qr{(?x:
 )};
 
 our $allocFunctions = qr{(?x:
-	(?:(?:devm_)?
-		(?:kv|k|v)[czm]alloc(?:_array)?(?:_node)? |
-		kstrdup(?:_const)? |
-		kmemdup(?:_nul)?) |
-	(?:\w+)?alloc_skb(?:_ip_align)? |
-				# dev_alloc_skb/netdev_alloc_skb, et al
-	dma_alloc_coherent
+	(?:x)?(?:c|re|m)alloc|
+	(?:i|o)buf_(?:alloc|reserve)|
+	(?:ls)?region_(?:aligned_)?(?:alloc|reserve)|
+	region_join|
+	smalloc|
+	mempool_alloc
 )};
 
 our $signature_tags = qr{(?xi:
@@ -4395,14 +4394,13 @@ sub process {
 			      "Consider removing the #if 1 and its #endif\n" . $herecurr);
 		}
 
-# check for needless "if (<foo>) fn(<foo>)" uses
-		if ($prevline =~ /\bif\s*\(\s*($Lval)\s*\)/) {
+# check for needless "if (<foo>) free(<foo>)" uses
+		if ($prevline =~ /\bif\s*\(\s*($Lval)(?:\s*!=\s*NULL)?\s*\)/) {
 			my $tested = quotemeta($1);
 			my $expr = '\s*\(\s*' . $tested . '\s*\)\s*;';
-			if ($line =~ /\b(kfree|usb_free_urb|debugfs_remove(?:_recursive)?|(?:kmem_cache|mempool|dma_pool)_destroy)$expr/) {
-				my $func = $1;
+			if ($line =~ /\bfree$expr/) {
 				ERROR('NEEDLESS_IF',
-				      "$func(NULL) is safe and this check is probably not required\n" . $hereprev);
+				      "free(NULL) is safe and this check is probably not required\n" . $hereprev);
 			}
 		}
 
@@ -4672,21 +4670,21 @@ sub process {
 # alloc style
 # p = alloc(sizeof(struct foo), ...) should be p = alloc(sizeof(*p), ...)
 		if ($perl_version_ok &&
-		    $line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*((?:kv|k|v)[mz]alloc(?:_node)?)\s*\(\s*(sizeof\s*\(\s*struct\s+$Lval\s*\))/) {
+		    $line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*((?:x)malloc)\s*\(\s*(sizeof\s*\(\s*struct\s+$Lval\s*\))/) {
 			ERROR("ALLOC_SIZEOF_STRUCT",
 			      "Prefer $3(sizeof(*$1)...) over $3($4...)\n" . $herecurr);
 		}
 
-# check for krealloc arg reuse
+# check for realloc arg reuse
 		if ($perl_version_ok &&
-		    $line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*krealloc\s*\(\s*($Lval)\s*,/ &&
+		    $line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*realloc\s*\(\s*($Lval)\s*,/ &&
 		    $1 eq $3) {
-			ERROR("KREALLOC_ARG_REUSE",
-			      "Reusing the krealloc arg is almost always a bug\n" . $herecurr);
+			ERROR("REALLOC_ARG_REUSE",
+			      "Reusing the realloc arg is almost always a bug\n" . $herecurr);
 		}
 
 # check for alloc argument mismatch
-		if ($line =~ /\b((?:devm_)?(?:kcalloc|kmalloc_array))\s*\(\s*sizeof\b/) {
+		if ($line =~ /\b((?:x)?calloc)\s*\(\s*sizeof\b/) {
 			ERROR("ALLOC_ARRAY_ARGS",
 			      "$1 uses number as first arg, sizeof is generally wrong\n" . $herecurr);
 		}

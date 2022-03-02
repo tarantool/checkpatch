@@ -179,9 +179,8 @@ Allocation style
 ----------------
 
   **ALLOC_ARRAY_ARGS**
-    The first argument for kcalloc or kmalloc_array should be the
-    number of elements.  sizeof() as the first argument is generally
-    wrong.
+    The first argument for calloc should be the number of elements.
+    sizeof() as the first argument is generally wrong.
 
   **ALLOC_SIZEOF_STRUCT**
     The allocation style is bad.  In general for family of
