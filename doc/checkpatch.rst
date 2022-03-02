@@ -409,13 +409,12 @@ Macros, Attributes and Symbols
 ------------------------------
 
   **ARRAY_SIZE**
-    The ARRAY_SIZE(foo) macro should be preferred over
-    sizeof(foo)/sizeof(foo[0]) for finding number of elements in an
-    array.
+    The lengthof(foo) macro should be preferred over sizeof(foo)/sizeof(foo[0])
+    for finding number of elements in an array.
 
     The macro is defined as::
 
-      #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+      #define lengthof(x) (sizeof(x) / sizeof((x)[0]))
 
   **AVOID_EXTERNS**
     Function prototypes don't need to be declared extern in .h

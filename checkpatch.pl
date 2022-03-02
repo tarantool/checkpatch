@@ -3407,13 +3407,13 @@ sub process {
 			      "char * array declaration might be better as static const\n" . $herecurr);
 		}
 
-# check for sizeof(foo)/sizeof(foo[0]) that could be ARRAY_SIZE(foo)
+# check for sizeof(foo)/sizeof(foo[0]) that could be lengthof(foo)
 		if ($line =~ m@\bsizeof\s*\(\s*($Lval)\s*\)@) {
 			my $array = $1;
 			if ($line =~ m@\b(sizeof\s*\(\s*\Q$array\E\s*\)\s*/\s*sizeof\s*\(\s*\Q$array\E\s*\[\s*0\s*\]\s*\))@) {
 				my $array_div = $1;
 				ERROR("ARRAY_SIZE",
-				      "Prefer ARRAY_SIZE($array)\n" . $herecurr);
+				      "Prefer lengthof($array)\n" . $herecurr);
 			}
 		}
 
