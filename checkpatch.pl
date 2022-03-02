@@ -999,8 +999,8 @@ EOM
 	if ($exit) {
 		print << "EOM"
 
-NOTE: If any of the errors are false positives, please report
-      them to the maintainer, see CHECKPATCH in MAINTAINERS.
+NOTE: If any of the errors are false positives, please file a bug at
+      https://github.com/tarantool/checkpatch/issues
 EOM
 	}
 }
@@ -4312,7 +4312,7 @@ sub process {
 		my $asm_volatile = qr{\b(__asm__|asm)\s+(__volatile__|volatile)\b};
 		if ($line =~ /\bvolatile\b/ && $line !~ /$asm_volatile/) {
 			ERROR("VOLATILE",
-			      "Use of volatile is usually wrong: see Documentation/process/volatile-considered-harmful.rst\n" . $herecurr);
+			      "Use of volatile is usually wrong\n" . $herecurr);
 		}
 
 # check for missing a space in a string concatenation

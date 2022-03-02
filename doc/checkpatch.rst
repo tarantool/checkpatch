@@ -4,13 +4,11 @@
 Checkpatch
 ==========
 
-Checkpatch (scripts/checkpatch.pl) is a perl script which checks for trivial
-style violations in patches and optionally corrects them.  Checkpatch can
-also be run on file contexts and without the kernel tree.
+Checkpatch (checkpatch.pl) is a perl script which checks for trivial
+style violations in patches or files.
 
-Checkpatch is not always right. Your judgement takes precedence over checkpatch
-messages.  If your code looks better with the violations, then its probably
-best left alone.
+If an error reported by checkpatch appears to be false positives, please file a
+bug at https://github.com/tarantool/checkpatch/issues
 
 
 Options
@@ -83,7 +81,7 @@ Available options:
  - -f,  --file
 
    Treat FILE as a regular source file.  This option must be used when running
-   checkpatch on source files in the kernel.
+   checkpatch on source files.
 
  - --list-types
 
@@ -185,8 +183,6 @@ Allocation style
     number of elements.  sizeof() as the first argument is generally
     wrong.
 
-    See: https://www.kernel.org/doc/html/latest/core-api/memory-allocation.html
-
   **ALLOC_SIZEOF_STRUCT**
     The allocation style is bad.  In general for family of
     allocation functions using sizeof() to get memory size,
@@ -197,8 +193,6 @@ Allocation style
     should be::
 
       p = alloc(sizeof(*p), ...)
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#allocating-memory
 
 
 API usage
@@ -218,24 +212,13 @@ Comments
     line comments is::
 
       /*
-      * This is the preferred style
-      * for multi line comments.
-      */
-
-    The networking comment style is a bit different, with the first line
-    not empty like the former::
-
-      /* This is the preferred comment style
-      * for files in net/ and drivers/net/
-      */
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
+       * This is the preferred style
+       * for multi line comments.
+       */
 
   **C99_COMMENTS**
     C99 style single line comments (//) should not be used.
     Prefer the block comment style instead.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#commenting
 
 
 Commit message
@@ -244,8 +227,6 @@ Commit message
   **BAD_SIGN_OFF**
     The signed-off-by line does not fall in line with the standards
     specified by the community.
-
-    See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#developer-s-certificate-of-origin-1-1
 
   **COMMIT_COMMENT_SYMBOL**
     Commit log lines starting with a '#' are ignored by git as
@@ -256,14 +237,10 @@ Commit message
     The patch is missing a commit description.  A brief
     description of the changes made by the patch should be added.
 
-    See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
-
   **EMAIL_SUBJECT**
     Naming the tool that found the issue is not very useful in the
     subject line.  A good subject line summarizes the change that
     the patch brings.
-
-    See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
 
   **FROM_SIGN_OFF_MISMATCH**
     The author's email does not match with that in the Signed-off-by:
@@ -282,8 +259,6 @@ Commit message
     line should be added according to Developer's certificate of
     Origin.
 
-    See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin
-
   **NO_AUTHOR_SIGN_OFF**
     The author of the patch has not signed off the patch.  It is
     required that a simple sign off line should be present at the
@@ -291,15 +266,11 @@ Commit message
     written it or otherwise has the rights to pass it on as an open
     source patch.
 
-    See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#sign-your-work-the-developer-s-certificate-of-origin
-
   **DIFF_IN_COMMIT_MSG**
     Avoid having diff content in commit message.
     This causes problems when one tries to apply a file containing both
     the changelog and the diff because patch(1) tries to apply the diff
     which it found in the changelog.
-
-    See: https://lore.kernel.org/lkml/20150611134006.9df79a893e3636019ad2759e@linux-foundation.org/
 
   **GERRIT_CHANGE_ID**
     To be picked up by gerrit, the footer of the commit message might
@@ -321,8 +292,6 @@ Commit message
       platform_set_drvdata(), but left the variable "dev" unused,
       delete it.
 
-    See: https://www.kernel.org/doc/html/latest/process/submitting-patches.html#describe-your-changes
-
 
 Comparison style
 ----------------
@@ -342,8 +311,6 @@ Comparison style
     Comparisons of A to true and false are better written
     as A and !A.
 
-    See: https://lore.kernel.org/lkml/1365563834.27174.12.camel@joe-AO722/
-
   **CONSTANT_COMPARISON**
     Comparisons with a constant or upper case identifier on the left
     side of the test should be avoided.
@@ -353,11 +320,8 @@ Indentation and Line Breaks
 ---------------------------
 
   **CODE_INDENT**
-    Code indent should use tabs instead of spaces.
-    Outside of comments, documentation and Kconfig,
-    spaces are never used for indentation.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
+    Code indent should use tabs instead of spaces.  Outside of comments and
+    documentation, spaces are never used for indentation.
 
   **DEEP_INDENTATION**
     Indentation with 6 or more tabs usually indicate overly indented
@@ -365,8 +329,6 @@ Indentation and Line Breaks
 
     It is suggested to refactor excessive indentation of
     if/else/for/do/while/switch statements.
-
-    See: https://lore.kernel.org/lkml/1328311239.21255.24.camel@joe2Laptop/
 
   **SWITCH_CASE_INDENT_LEVEL**
     switch should be at the same indent as case.
@@ -389,33 +351,20 @@ Indentation and Line Breaks
               break;
       }
 
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#indentation
-
   **LONG_LINE**
     The line has exceeded the specified maximum length.
     To use a different maximum line length, the --max-line-length=n option
     may be added while invoking checkpatch.
-
-    Earlier, the default line length was 80 columns.  Commit bdc48fa11e46
-    ("checkpatch/coding-style: deprecate 80-column warning") increased the
-    limit to 100 columns.  This is not a hard limit either and it's
-    preferable to stay within 80 columns whenever possible.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
 
   **LONG_LINE_STRING**
     A string starts before but extends beyond the maximum line length.
     To use a different maximum line length, the --max-line-length=n option
     may be added while invoking checkpatch.
 
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
-
   **LONG_LINE_COMMENT**
     A comment starts before but extends beyond the maximum line length.
     To use a different maximum line length, the --max-line-length=n option
     may be added while invoking checkpatch.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#breaking-long-lines-and-strings
 
   **MULTILINE_DEREFERENCE**
     A single dereferencing identifier spanned on multiple lines like::
@@ -465,7 +414,7 @@ Macros, Attributes and Symbols
     sizeof(foo)/sizeof(foo[0]) for finding number of elements in an
     array.
 
-    The macro is defined in include/linux/kernel.h::
+    The macro is defined as::
 
       #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -478,11 +427,9 @@ Macros, Attributes and Symbols
     the same set of tools is reproducible, i.e. the output is always
     exactly the same.
 
-    The kernel does *not* use the ``__DATE__`` and ``__TIME__`` macros,
-    and enables warnings if they are used as they can lead to
+    We don't use the ``__DATE__`` and ``__TIME__`` macros,
+    and enable warnings if they are used as they can lead to
     non-deterministic builds.
-
-    See: https://www.kernel.org/doc/html/latest/kbuild/reproducible-builds.html#timestamps
 
   **DO_WHILE_MACRO_WITH_TRAILING_SEMICOLON**
     do {} while(0) macros should not have a trailing semicolon.
@@ -515,8 +462,6 @@ Macros, Attributes and Symbols
                         do_this(b, c);          \
         } while (0)
 
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#macros-enums-and-rtl
-
   **PREFER_FALLTHROUGH**
     Use the `fallthrough;` pseudo keyword instead of
     `/* fallthrough */` like comments.
@@ -539,8 +484,6 @@ Macros, Attributes and Symbols
     Then there would be a compilation error, because when the macro is
     expanded there are two trailing semicolons, so the else branch gets
     orphaned.
-
-    See: https://lore.kernel.org/lkml/1399671106.2912.21.camel@joe-AO725/
 
   **SINGLE_STATEMENT_DO_WHILE_MACRO**
     For the multi-statement macros, it is necessary to use the do-while
@@ -642,13 +585,11 @@ Permissions
   **SYMBOLIC_PERMS**
     Permission bits in the octal form are more readable and easier to
     understand than their symbolic counterparts because many command-line
-    tools use this notation. Experienced kernel developers have been using
+    tools use this notation. Experienced developers have been using
     these traditional Unix permission bits for decades and so they find it
     easier to understand the octal notation than the symbolic macros.
     For example, it is harder to read S_IWUSR|S_IRUGO than 0644, which
     obscures the developer's intent rather than clarifying it.
-
-    See: https://lore.kernel.org/lkml/CA+55aFw5v23T-zvDZp-MmD_EYxF8WbafwwB59934FV7g21uMGQ@mail.gmail.com/
 
 
 Spacing and Brackets
@@ -675,8 +616,6 @@ Spacing and Brackets
       {
               body of function
       }
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
 
   **BRACKET_SPACE**
     Whitespace before opening bracket '[' is prohibited.
@@ -707,20 +646,14 @@ Spacing and Brackets
   **ELSE_AFTER_BRACE**
     `else {` should follow the closing block `}` on the same line.
 
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
-
   **LINE_SPACING**
     Vertical space is wasted given the limited number of lines an
     editor window can display when multiple blank lines are used.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
 
   **OPEN_BRACE**
     The opening brace should be following the function definitions on the
     next line.  For any non-functional block it should be on the same line
     as the last construct.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
 
   **POINTER_LOCATION**
     When using pointer data or a function that returns a pointer type,
@@ -732,19 +665,10 @@ Spacing and Brackets
       unsigned long long memparse(char *ptr, char **retptr);
       char *match_strdup(substring_t *s);
 
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
-
-  **SPACING**
-    Whitespace style used in the kernel sources is described in kernel docs.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
-
   **TRAILING_WHITESPACE**
     Trailing whitespace should always be removed.
     Some editors highlight the trailing whitespace and cause visual
     distractions when editing files.
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#spaces
 
   **UNNECESSARY_PARENTHESES**
     Parentheses are not required in the following cases:
@@ -773,8 +697,6 @@ Spacing and Brackets
       do {
               ...
       } while(something);
-
-    See: https://www.kernel.org/doc/html/latest/process/coding-style.html#placing-braces-and-spaces
 
 
 Others
