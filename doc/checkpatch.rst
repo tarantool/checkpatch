@@ -114,7 +114,7 @@ Available options:
 
  - --max-line-length=n
 
-   Set the max line length (default 100).  If a line exceeds the specified
+   Set the max line length (default 80).  If a line exceeds the specified
    length, a LONG_LINE message is emitted.
 
  - --tab-size=n
