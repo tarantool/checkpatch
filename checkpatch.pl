@@ -465,13 +465,9 @@ our $typeTypedefs = qr{(?x:
 our $zero_initializer = qr{(?:(?:0[xX])?0+$Int_type?|NULL|false)\b};
 
 our $logFunctions = qr{(?x:
-	printk(?:_ratelimited|_once|_deferred_once|_deferred|)|
-	(?:[a-z0-9]+_){1,2}(?:printk|emerg|alert|crit|err|warning|warn|notice|info|debug|dbg|vdbg|devel|cont|WARN)(?:_ratelimited|_once|)|
-	TP_printk|
-	WARN(?:_RATELIMIT|_ONCE|)|
-	panic|
-	MODULE_[A-Z_]+|
-	seq_vprintf|seq_printf|seq_puts
+	say_file_line|
+	(?:log_)?say(?:_error|_crit|_warn|_info|_verbose|_debug|_syserror|)(?:_ratelimited)?|
+	panic(?:|_status|_syserror|)
 )};
 
 our $allocFunctions = qr{(?x:
