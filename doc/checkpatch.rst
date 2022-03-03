@@ -534,6 +534,17 @@ Functions and Variables
 
          All arguments should have identifier names.
 
+  **FUNCTION_NAME_NO_NEWLINE**
+    Function name and return value type should be placed on
+    different lines::
+
+      int foo(int bar)
+
+    should be::
+
+      int
+      foo(int bar)
+
   **FUNCTION_WITHOUT_ARGS**
     Function declarations without arguments like::
 

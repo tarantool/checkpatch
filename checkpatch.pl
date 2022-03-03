@@ -3437,6 +3437,12 @@ sub process {
 			      "Bad function definition - $1() should probably be $1(void)\n" . $herecurr);
 		}
 
+# check that function name and return value type are placed on different lines
+		if ($line =~ /\b$Type\s*(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*\(/) {
+			ERROR("FUNCTION_NAME_NO_NEWLINE",
+			      "Function name and return value type should be placed on different lines\n" . $herecurr)
+		}
+
 # check for new typedefs, only function parameters and sparse annotations
 # make sense.
 		if ($line =~ /\btypedef\s/ &&
