@@ -2086,6 +2086,7 @@ sub process {
 	my $commit_log_long_line = 0;
 	my $commit_log_has_diff = 0;
 	my $non_utf8_charset = 0;
+	my $has_exec_perm = 0;		#Current file has exec permissions
 
 	my $last_git_commit_id_linenr = -1;
 
@@ -2254,10 +2255,26 @@ sub process {
 		# extract the filename as it passes
 		if ($line =~ /^diff --git.*?(\S+)$/ ||
 		    $line =~ /^\+\+\+\s+(\S+)/) {
-			$realfile = $1;
-			$realfile =~ s@^([^/]*)/@@ if (!$file);
+			my $newrealfile = $1;
+			$newrealfile =~ s@^([^/]*)/@@ if (!$file);
+			if ($realfile ne $newrealfile) {
+				$realfile = $newrealfile;
+				$has_exec_perm = 0;
+			}
 			$in_commit_log = 0;
 			next
+		}
+
+# Check for incorrect file permissions
+		if ($line =~ /^new (file )?mode.*[7531]\d{0,2}$/) {
+			$has_exec_perm = 1
+		}
+		if ($realline == 1 and ($line =~ /^\+#!/) != $has_exec_perm) {
+			my $permhere = $here . "FILE: $realfile\n";
+			my $msg = ($has_exec_perm ?
+				   "Executable file must have hashbang (#!)" :
+				   "Hashbang (#!) without execute permissions is useless");
+			ERROR("EXECUTE_PERMISSIONS", "$msg\n" . $permhere);
 		}
 
 #make up the handle for any error we report on this line
@@ -2300,16 +2317,6 @@ sub process {
 			ERROR("DIFF_IN_COMMIT_MSG",
 			      "Avoid using diff content in the commit message - patch(1) might not work\n" . $herecurr);
 			$commit_log_has_diff = 1;
-		}
-
-# Check for incorrect file permissions
-		if ($line =~ /^new (file )?mode.*[7531]\d{0,2}$/) {
-			my $permhere = $here . "FILE: $realfile\n";
-			if ($realfile !~ m@scripts/@ &&
-			    $realfile !~ /\.(py|pl|awk|sh)$/) {
-				ERROR("EXECUTE_PERMISSIONS",
-				      "do not set execute permissions for source files\n" . $permhere);
-			}
 		}
 
 # Check the patch for a From:

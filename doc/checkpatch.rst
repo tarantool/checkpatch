@@ -574,7 +574,8 @@ Permissions
 
   **EXECUTE_PERMISSIONS**
     There is no reason for source files to be executable.  The executable
-    bit can be removed safely.
+    bit can be removed safely.  The only exception is a script that has a
+    hashbang sign (#!) - it must be executable.
 
   **NON_OCTAL_PERMISSIONS**
     Permission bits should use 4 digit octal permissions (like 0700 or 0444).
