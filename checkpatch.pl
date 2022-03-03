@@ -3439,10 +3439,10 @@ sub process {
 # check for new typedefs, only function parameters and sparse annotations
 # make sense.
 		if ($line =~ /\btypedef\s/ &&
+		    $line !~ /\btypedef\s+$Type$/ &&
 		    $line !~ /\btypedef\s+$Type\s*\(\s*\*?$Ident\s*\)\s*\(/ &&
 		    $line !~ /\btypedef\s+$Type\s+$Ident\s*\(/ &&
-		    $line !~ /\b$typeTypedefs\b/ &&
-		    $line !~ /\b__bitwise\b/) {
+		    $line !~ /\b$typeTypedefs\b/) {
 			ERROR("NEW_TYPEDEFS",
 			      "do not add new typedefs\n" . $herecurr);
 		}
