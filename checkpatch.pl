@@ -2686,6 +2686,10 @@ sub process {
 				next if (lc($first) ne lc($second));
 				next if ($first eq 'long');
 
+				# Ignore Doxygen-style comments like
+				# @param request Request to process
+				next if $rawline =~ /^\+\s\*\s+[\@\\]param(?:\[[a-z,]*\])*\s+$first $second/;
+
 				# check for character before and after the word matches
 				my $start_char = '';
 				my $end_char = '';
