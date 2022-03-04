@@ -151,19 +151,6 @@ Available options:
    Turn on/off debugging of KEY, where KEY is one of 'values', 'possible',
    'type', and 'attr' (default is all off).
 
- - --fix
-
-   This is an EXPERIMENTAL feature.  If correctable errors exists, a file
-   <inputfile>.EXPERIMENTAL-checkpatch-fixes is created which has the
-   automatically fixable errors corrected.
-
- - --fix-inplace
-
-   EXPERIMENTAL - Similar to --fix but input file is overwritten with fixes.
-
-   DO NOT USE this flag unless you are absolutely sure and you have a backup
-   in place.
-
  - --ignore-perl-version
 
    Override checking of perl version.  Runtime errors maybe encountered after

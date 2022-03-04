@@ -41,8 +41,6 @@ my $mailback = 0;
 my $summary_file = 0;
 my $show_types = 0;
 my $list_types = 0;
-my $fix = 0;
-my $fix_inplace = 0;
 my $gitroot = $ENV{'GIT_DIR'};
 $gitroot = ".git" if !defined($gitroot);
 my %debug;
@@ -109,14 +107,6 @@ Options:
                              is all off)
   --test-only=WORD           report only warnings/errors containing WORD
                              literally
-  --fix                      EXPERIMENTAL - may create horrible results
-                             If correctable single-line errors exist, create
-                             "<inputfile>.EXPERIMENTAL-checkpatch-fixes"
-                             with potential errors corrected to the preferred
-                             checkpatch style
-  --fix-inplace              EXPERIMENTAL - may create horrible results
-                             Is the same as --fix, but overwrites the input
-                             file.  It's your fault if there's no backup or git
   --ignore-perl-version      override checking of perl version.  expect
                              runtime errors.
   --codespell                Use the codespell dictionary for spelling/typos
@@ -296,8 +286,6 @@ GetOptions(
 	'summary!'	=> \$summary,
 	'mailback!'	=> \$mailback,
 	'summary-file!'	=> \$summary_file,
-	'fix!'		=> \$fix,
-	'fix-inplace!'	=> \$fix_inplace,
 	'ignore-perl-version!' => \$ignore_perl_version,
 	'debug=s'	=> \%debug,
 	'test-only=s'	=> \$tst_only,
@@ -336,7 +324,7 @@ EOF
 # $help is 2 if invalid option is passed - exitcode: 1
 help($help - 1) if ($help);
 
-die "$P: --git cannot be used with --file or --fix\n" if ($git && ($file || $fix));
+die "$P: --git cannot be used with --file\n" if ($git && $file);
 die "$P: --verbose cannot be used with --terse\n" if ($verbose && $terse);
 
 if ($color =~ /^[01]$/) {
@@ -353,8 +341,6 @@ if ($color =~ /^[01]$/) {
 
 load_docs() if ($verbose);
 list_types(0) if ($list_types);
-
-$fix = 1 if ($fix_inplace);
 
 my $exit = 0;
 
@@ -414,8 +400,6 @@ for my $key (keys %debug) {
 	eval "\${dbg_$key} = '$debug{$key}';";
 	die "$@" if ($@);
 }
-
-my $rpt_cleaners = 0;
 
 if ($terse) {
 	$emacs = 1;
@@ -955,10 +939,6 @@ $chk_signoff = 0 if ($file);
 
 my @rawlines = ();
 my @lines = ();
-my @fixed = ();
-my @fixed_inserted = ();
-my @fixed_deleted = ();
-my $fixlinenr = -1;
 
 # If input is git commits, extract all commits from the commit expressions.
 # For example, HEAD-3 means we need check 'HEAD, HEAD~1, HEAD~2'.
@@ -1032,10 +1012,6 @@ for my $filename (@ARGV) {
 	}
 	@rawlines = ();
 	@lines = ();
-	@fixed = ();
-	@fixed_inserted = ();
-	@fixed_deleted = ();
-	$fixlinenr = -1;
 	@modifierListFile = ();
 	@typeListFile = ();
 	build_types();
@@ -2048,90 +2024,6 @@ sub report_dump {
 	our @report;
 }
 
-sub fixup_current_range {
-	my ($lineRef, $offset, $length) = @_;
-
-	if ($$lineRef =~ /^\@\@ -\d+,\d+ \+(\d+),(\d+) \@\@/) {
-		my $o = $1;
-		my $l = $2;
-		my $no = $o + $offset;
-		my $nl = $l + $length;
-		$$lineRef =~ s/\+$o,$l \@\@/\+$no,$nl \@\@/;
-	}
-}
-
-sub fix_inserted_deleted_lines {
-	my ($linesRef, $insertedRef, $deletedRef) = @_;
-
-	my $range_last_linenr = 0;
-	my $delta_offset = 0;
-
-	my $old_linenr = 0;
-	my $new_linenr = 0;
-
-	my $next_insert = 0;
-	my $next_delete = 0;
-
-	my @lines = ();
-
-	my $inserted = @{$insertedRef}[$next_insert++];
-	my $deleted = @{$deletedRef}[$next_delete++];
-
-	foreach my $old_line (@{$linesRef}) {
-		my $save_line = 1;
-		my $line = $old_line;	#don't modify the array
-		if ($line =~ /^(?:\+\+\+|\-\-\-)\s+\S+/) {	#new filename
-			$delta_offset = 0;
-		} elsif ($line =~ /^\@\@ -\d+,\d+ \+\d+,\d+ \@\@/) {	#new hunk
-			$range_last_linenr = $new_linenr;
-			fixup_current_range(\$line, $delta_offset, 0);
-		}
-
-		while (defined($deleted) && ${$deleted}{'LINENR'} == $old_linenr) {
-			$deleted = @{$deletedRef}[$next_delete++];
-			$save_line = 0;
-			fixup_current_range(\$lines[$range_last_linenr], $delta_offset--, -1);
-		}
-
-		while (defined($inserted) && ${$inserted}{'LINENR'} == $old_linenr) {
-			push(@lines, ${$inserted}{'LINE'});
-			$inserted = @{$insertedRef}[$next_insert++];
-			$new_linenr++;
-			fixup_current_range(\$lines[$range_last_linenr], $delta_offset++, 1);
-		}
-
-		if ($save_line) {
-			push(@lines, $line);
-			$new_linenr++;
-		}
-
-		$old_linenr++;
-	}
-
-	return @lines;
-}
-
-sub fix_insert_line {
-	my ($linenr, $line) = @_;
-
-	my $inserted = {
-		LINENR => $linenr,
-		LINE => $line,
-	};
-	push(@fixed_inserted, $inserted);
-}
-
-sub fix_delete_line {
-	my ($linenr, $line) = @_;
-
-	my $deleted = {
-		LINENR => $linenr,
-		LINE => $line,
-	};
-
-	push(@fixed_deleted, $deleted);
-}
-
 sub ERROR {
 	my ($type, $msg) = @_;
 
@@ -2318,8 +2210,6 @@ sub process {
 		$linenr++;
 		$line = $rawline;
 
-		push(@fixed, $rawline) if ($fix);
-
 		if ($rawline =~ /^\@\@ -\d+(?:,\d+)? \+(\d+)(,(\d+))? \@\@/) {
 			$realline=$1-1;
 			if (defined $2) {
@@ -2384,10 +2274,8 @@ sub process {
 
 	$realcnt = 0;
 	$linenr = 0;
-	$fixlinenr = -1;
 	foreach my $line (@lines) {
 		$linenr++;
-		$fixlinenr++;
 		my $sline = $line;	#copy of $line
 		$sline =~ s/$;/ /g;	#with comments as spaces
 
@@ -2585,37 +2473,21 @@ sub process {
 					WARN("BAD_SIGN_OFF",
 					     "Non-standard signature: $sign_off\n" . $herecurr);
 				} else {
-					if (WARN("BAD_SIGN_OFF",
-						 "Non-standard signature: '$sign_off' - perhaps '$suggested_signature'?\n" . $herecurr) &&
-					    $fix) {
-						$fixed[$fixlinenr] =~ s/$sign_off/$suggested_signature/;
-					}
+					WARN("BAD_SIGN_OFF",
+					     "Non-standard signature: '$sign_off' - perhaps '$suggested_signature'?\n" . $herecurr);
 				}
 			}
 			if (defined $space_before && $space_before ne "") {
-				if (WARN("BAD_SIGN_OFF",
-					 "Do not use whitespace before $ucfirst_sign_off\n" . $herecurr) &&
-				    $fix) {
-					$fixed[$fixlinenr] =
-					    "$ucfirst_sign_off $email";
-				}
+				WARN("BAD_SIGN_OFF",
+				     "Do not use whitespace before $ucfirst_sign_off\n" . $herecurr);
 			}
 			if ($sign_off =~ /-by:$/i && $sign_off ne $ucfirst_sign_off) {
-				if (WARN("BAD_SIGN_OFF",
-					 "'$ucfirst_sign_off' is the preferred signature form\n" . $herecurr) &&
-				    $fix) {
-					$fixed[$fixlinenr] =
-					    "$ucfirst_sign_off $email";
-				}
-
+				WARN("BAD_SIGN_OFF",
+				     "'$ucfirst_sign_off' is the preferred signature form\n" . $herecurr);
 			}
 			if (!defined $space_after || $space_after ne " ") {
-				if (WARN("BAD_SIGN_OFF",
-					 "Use a single space after $ucfirst_sign_off\n" . $herecurr) &&
-				    $fix) {
-					$fixed[$fixlinenr] =
-					    "$ucfirst_sign_off $email";
-				}
+				WARN("BAD_SIGN_OFF",
+				     "Use a single space after $ucfirst_sign_off\n" . $herecurr);
 			}
 
 			my ($email_name, $name_comment, $email_address, $comment) = parse_email($email);
@@ -2630,22 +2502,16 @@ sub process {
 				# Don't force email to have quotes
 				# Allow just an angle bracketed address
 				if (!same_email_addresses($email, $suggested_email)) {
-					if (WARN("BAD_SIGN_OFF",
-						 "email address '$email' might be better as '$suggested_email'\n" . $herecurr) &&
-					    $fix) {
-						$fixed[$fixlinenr] =~ s/\Q$email\E/$suggested_email/;
-					}
+					WARN("BAD_SIGN_OFF",
+					     "email address '$email' might be better as '$suggested_email'\n" . $herecurr);
 				}
 
 				# Address part shouldn't have comments
 				my $stripped_address = $email_address;
 				$stripped_address =~ s/\([^\(\)]*\)//g;
 				if ($email_address ne $stripped_address) {
-					if (WARN("BAD_SIGN_OFF",
-						 "address part of email should not have comments: '$email_address'\n" . $herecurr) &&
-					    $fix) {
-						$fixed[$fixlinenr] =~ s/\Q$email_address\E/$stripped_address/;
-					}
+					WARN("BAD_SIGN_OFF",
+					     "address part of email should not have comments: '$email_address'\n" . $herecurr);
 				}
 
 				# Only one name comment should be allowed
@@ -2668,11 +2534,8 @@ sub process {
 					$new_comment = "($new_comment)" if ($new_comment ne "");
 					my $new_email = format_email($email_name, $name_comment, $email_address, $new_comment);
 
-					if (WARN("BAD_SIGN_OFF",
-						 "Unexpected content after email: '$email', should be: '$new_email'\n" . $herecurr) &&
-					    $fix) {
-						$fixed[$fixlinenr] =~ s/\Q$email\E/$new_email/;
-					}
+					WARN("BAD_SIGN_OFF",
+					     "Unexpected content after email: '$email', should be: '$new_email'\n" . $herecurr);
 				}
 			}
 
@@ -2715,11 +2578,8 @@ sub process {
 
 # Check for Gerrit Change-Ids not in any patch context
 		if ($realfile eq '' && !$has_patch_separator && $line =~ /^\s*change-id:/i) {
-			if (ERROR("GERRIT_CHANGE_ID",
-			          "Remove Gerrit Change-Id's before submitting upstream\n" . $herecurr) &&
-			    $fix) {
-				fix_delete_line($fixlinenr, $rawline);
-			}
+			ERROR("GERRIT_CHANGE_ID",
+			      "Remove Gerrit Change-Id's before submitting upstream\n" . $herecurr);
 		}
 
 # Check for line lengths > 75 in commit log, warn once
@@ -2738,11 +2598,8 @@ sub process {
 
 # Check for lines starting with a #
 		if ($in_commit_log && $line =~ /^#/) {
-			if (WARN("COMMIT_COMMENT_SYMBOL",
-				 "Commit log lines starting with '#' are dropped by git as comments\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/^/ /;
-			}
+			WARN("COMMIT_COMMENT_SYMBOL",
+			     "Commit log lines starting with '#' are dropped by git as comments\n" . $herecurr);
 		}
 
 # Check for git id commit length and improperly formed commit descriptions
@@ -2877,11 +2734,8 @@ sub process {
 				$typo_fix = uc($typo_fix) if ($typo =~ /^[A-Z]+$/);
 				my $msg_level = \&WARN;
 				$msg_level = \&CHK if ($file);
-				if (&{$msg_level}("TYPO_SPELLING",
-						  "'$typo' may be misspelled - perhaps '$typo_fix'?\n" . $hereptr) &&
-				    $fix) {
-					$fixed[$fixlinenr] =~ s/(^|[^A-Za-z@])($typo)($|[^A-Za-z@])/$1$typo_fix$3/;
-				}
+				&{$msg_level}("TYPO_SPELLING",
+					      "'$typo' may be misspelled - perhaps '$typo_fix'?\n" . $hereptr);
 			}
 		}
 
@@ -2929,11 +2783,8 @@ sub process {
 					next if (!exists($allow_repeated_words{lc($first)}));
 				}
 
-				if (WARN("REPEATED_WORD",
-					 "Possible repeated word: '$first'\n" . $herecurr) &&
-				    $fix) {
-					$fixed[$fixlinenr] =~ s/\b$first $second\b/$first/;
-				}
+				WARN("REPEATED_WORD",
+				     "Possible repeated word: '$first'\n" . $herecurr);
 			}
 
 			# if it's a repeated word on consecutive lines in a comment block
@@ -2941,11 +2792,8 @@ sub process {
 			    $prevrawline =~ /($word_pattern)\s*$/) {
 				my $last_word = $1;
 				if ($rawline =~ /^\+\s*\*\s*$last_word /) {
-					if (WARN("REPEATED_WORD",
-						 "Possible repeated word: '$last_word'\n" . $hereprev) &&
-					    $fix) {
-						$fixed[$fixlinenr] =~ s/(\+\s*\*\s*)$last_word /$1/;
-					}
+					WARN("REPEATED_WORD",
+					     "Possible repeated word: '$last_word'\n" . $hereprev);
 				}
 			}
 		}
@@ -2956,20 +2804,12 @@ sub process {
 #trailing whitespace
 		if ($line =~ /^\+.*\015/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
-			if (ERROR("DOS_LINE_ENDINGS",
-				  "DOS line endings\n" . $herevet) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/[\s\015]+$//;
-			}
+			ERROR("DOS_LINE_ENDINGS",
+			      "DOS line endings\n" . $herevet);
 		} elsif ($rawline =~ /^\+.*\S\s+$/ || $rawline =~ /^\+\s+$/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
-			if (ERROR("TRAILING_WHITESPACE",
-				  "trailing whitespace\n" . $herevet) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\s+$//;
-			}
-
-			$rpt_cleaners = 1;
+			ERROR("TRAILING_WHITESPACE",
+			      "trailing whitespace\n" . $herevet);
 		}
 
 # check for embedded filenames
@@ -3042,11 +2882,8 @@ sub process {
 
 # check for adding lines without a newline.
 		if ($line =~ /^\+/ && defined $lines[$linenr] && $lines[$linenr] =~ /^\\ No newline at end of file/) {
-			if (WARN("MISSING_EOF_NEWLINE",
-			         "adding a line without newline at end of file\n" . $herecurr) &&
-			    $fix) {
-				fix_delete_line($fixlinenr+1, "No newline at end of file");
-			}
+			WARN("MISSING_EOF_NEWLINE",
+			     "adding a line without newline at end of file\n" . $herecurr);
 		}
 
 # at the beginning of a line any tabs must come first and anything
@@ -3054,51 +2891,27 @@ sub process {
 		if ($rawline =~ /^\+\s* \t\s*\S/ ||
 		    $rawline =~ /^\+\s*        \s*/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
-			$rpt_cleaners = 1;
-			if (ERROR("CODE_INDENT",
-				  "code indent should use tabs where possible\n" . $herevet) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/^\+([ \t]+)/"\+" . tabify($1)/e;
-			}
+			ERROR("CODE_INDENT",
+			      "code indent should use tabs where possible\n" . $herevet);
 		}
 
 # check for space before tabs.
 		if ($rawline =~ /^\+/ && $rawline =~ / \t/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
-			if (WARN("SPACE_BEFORE_TAB",
-				"please, no space before tabs\n" . $herevet) &&
-			    $fix) {
-				while ($fixed[$fixlinenr] =~
-					   s/(^\+.*) {$tabsize,$tabsize}\t/$1\t\t/) {}
-				while ($fixed[$fixlinenr] =~
-					   s/(^\+.*) +\t/$1\t/) {}
-			}
+			WARN("SPACE_BEFORE_TAB",
+			     "please, no space before tabs\n" . $herevet);
 		}
 
 # check for assignments on the start of a line
 		if ($sline =~ /^\+\s+($Assignment)[^=]/) {
-			my $operator = $1;
-			if (CHK("ASSIGNMENT_CONTINUATIONS",
-				"Assignment operator '$1' should be on the previous line\n" . $hereprev) &&
-			    $fix && $prevrawline =~ /^\+/) {
-				# add assignment operator to the previous line, remove from current line
-				$fixed[$fixlinenr - 1] .= " $operator";
-				$fixed[$fixlinenr] =~ s/\Q$operator\E\s*//;
-			}
+			CHK("ASSIGNMENT_CONTINUATIONS",
+			    "Assignment operator '$1' should be on the previous line\n" . $hereprev);
 		}
 
 # check for && or || at the start of a line
-		if ($rawline =~ /^\+\s*(&&|\|\|)/) {
-			my $operator = $1;
-			if (CHK("LOGICAL_CONTINUATIONS",
-				"Logical continuations should be on the previous line\n" . $hereprev) &&
-			    $fix && $prevrawline =~ /^\+/) {
-				# insert logical operator at last non-comment, non-whitepsace char on previous line
-				$prevline =~ /[\s$;]*$/;
-				my $line_end = substr($prevrawline, $-[0]);
-				$fixed[$fixlinenr - 1] =~ s/\Q$line_end\E$/ $operator$line_end/;
-				$fixed[$fixlinenr] =~ s/\Q$operator\E\s*//;
-			}
+		if ($rawline =~ /^\+\s*(?:&&|\|\|)/) {
+			CHK("LOGICAL_CONTINUATIONS",
+			    "Logical continuations should be on the previous line\n" . $hereprev);
 		}
 
 # check indentation starts on a tab stop
@@ -3106,11 +2919,8 @@ sub process {
 		    $sline =~ /^\+\t+( +)(?:$c90_Keywords\b|\{\s*$|\}\s*(?:else\b|while\b|\s*$)|$Declare\s*$Ident\s*[;=])/) {
 			my $indent = length($1);
 			if ($indent % $tabsize) {
-				if (WARN("TABSTOP",
-					 "Statements should start on a tabstop\n" . $herecurr) &&
-				    $fix) {
-					$fixed[$fixlinenr] =~ s@(^\+\t+) +@$1 . "\t" x ($indent/$tabsize)@e;
-				}
+				WARN("TABSTOP",
+				     "Statements should start on a tabstop\n" . $herecurr);
 			}
 		}
 
@@ -3134,12 +2944,8 @@ sub process {
 				if ($newindent ne $goodtabindent &&
 				    $newindent ne $goodspaceindent) {
 
-					if (CHK("PARENTHESIS_ALIGNMENT",
-						"Alignment should match open parenthesis\n" . $hereprev) &&
-					    $fix && $line =~ /^\+/) {
-						$fixed[$fixlinenr] =~
-						    s/^\+[ \t]*/\+$goodtabindent/;
-					}
+					CHK("PARENTHESIS_ALIGNMENT",
+					    "Alignment should match open parenthesis\n" . $hereprev);
 				}
 			}
 		}
@@ -3153,12 +2959,8 @@ sub process {
 #   known attributes or the __attribute__ keyword
 		if ($line =~ /^\+(.*)\(\s*$Type\s*\)([ \t]++)((?![={]|\\$|$Attribute|__attribute__))/ &&
 		    (!defined($1) || $1 !~ /\b(?:sizeof|__alignof__)\s*$/)) {
-			if (CHK("SPACING",
-				"No space is necessary after a cast\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/(\(\s*$Type\s*\))[ \t]+/$1/;
-			}
+			CHK("SPACING",
+			    "No space is necessary after a cast\n" . $herecurr);
 		}
 
 # Block comment styles
@@ -3211,22 +3013,16 @@ sub process {
 		    $line =~ /^\+/ &&
 		    !($line =~ /^\+\s*$/ ||
 		      $line =~ /^\+\s*\#\s*(?:end|elif|else)/)) {
-			if (CHK("LINE_SPACING",
-				"Please use a blank line after function/struct/union/enum declarations\n" . $hereprev) &&
-			    $fix) {
-				fix_insert_line($fixlinenr, "\+");
-			}
+			CHK("LINE_SPACING",
+			    "Please use a blank line after function/struct/union/enum declarations\n" . $hereprev);
 		}
 
 # check for multiple consecutive blank lines
 		if ($prevline =~ /^[\+ ]\s*$/ &&
 		    $line =~ /^\+\s*$/ &&
 		    $last_blank_line != ($linenr - 1)) {
-			if (CHK("LINE_SPACING",
-				"Please don't use multiple blank lines\n" . $hereprev) &&
-			    $fix) {
-				fix_delete_line($fixlinenr, $rawline);
-			}
+			CHK("LINE_SPACING",
+			    "Please don't use multiple blank lines\n" . $hereprev);
 
 			$last_blank_line = $linenr;
 		}
@@ -3262,11 +3058,8 @@ sub process {
 		if ($sline =~ /^\+([\t]+)break\s*;\s*$/) {
 			my $tabs = $1;
 			if ($prevline =~ /^\+$tabs(goto|return|break)\b/) {
-				if (WARN("UNNECESSARY_BREAK",
-					 "break is not useful after a $1\n" . $hereprev) &&
-				    $fix) {
-					fix_delete_line($fixlinenr, $rawline);
-				}
+				WARN("UNNECESSARY_BREAK",
+				     "break is not useful after a $1\n" . $hereprev);
 			}
 		}
 
@@ -3571,16 +3364,8 @@ sub process {
 
 				$pointer = "" if (!defined $pointer);
 
-				if (WARN("UNSPECIFIED_INT",
-					 "Prefer '" . trim($sign) . " int" . rtrim($pointer) . "' to bare use of '$sign" . rtrim($pointer) . "'\n" . $herecurr) &&
-				    $fix) {
-					my $decl = trim($sign) . " int ";
-					my $comp_pointer = $pointer;
-					$comp_pointer =~ s/\s//g;
-					$decl .= $comp_pointer;
-					$decl = rtrim($decl) if ($var eq "");
-					$fixed[$fixlinenr] =~ s@\b$sign\s*\Q$pointer\E\s*$var\b@$decl$var@;
-				}
+				WARN("UNSPECIFIED_INT",
+				     "Prefer '" . trim($sign) . " int" . rtrim($pointer) . "' to bare use of '$sign" . rtrim($pointer) . "'\n" . $herecurr);
 			}
 		}
 
@@ -3610,18 +3395,8 @@ sub process {
 # check for initialisation to aggregates open brace on the next line
 		if ($line =~ /^.\s*{/ &&
 		    $prevline =~ /(?:^|[^=])=\s*$/) {
-			if (ERROR("OPEN_BRACE",
-				  "that open brace { should be on the previous line\n" . $hereprev) &&
-			    $fix && $prevline =~ /^\+/ && $line =~ /^\+/) {
-				fix_delete_line($fixlinenr - 1, $prevrawline);
-				fix_delete_line($fixlinenr, $rawline);
-				my $fixedline = $prevrawline;
-				$fixedline =~ s/\s*=\s*$/ = {/;
-				fix_insert_line($fixlinenr, $fixedline);
-				$fixedline = $line;
-				$fixedline =~ s/^(.\s*)\{\s*/$1/;
-				fix_insert_line($fixlinenr, $fixedline);
-			}
+			ERROR("OPEN_BRACE",
+			      "that open brace { should be on the previous line\n" . $hereprev);
 		}
 
 #
@@ -3639,15 +3414,8 @@ sub process {
 
 # no C99 // comments
 		if ($line =~ m{//}) {
-			if (ERROR("C99_COMMENTS",
-				  "do not use C99 // comments\n" . $herecurr) &&
-			    $fix) {
-				my $line = $fixed[$fixlinenr];
-				if ($line =~ /\/\/(.*)$/) {
-					my $comment = trim($1);
-					$fixed[$fixlinenr] =~ s@\/\/(.*)$@/\* $comment \*/@;
-				}
-			}
+			ERROR("C99_COMMENTS",
+			      "do not use C99 // comments\n" . $herecurr);
 		}
 		# Remove C99 comments.
 		$line =~ s@//.*@@;
@@ -3655,20 +3423,13 @@ sub process {
 
 # check for global initialisers.
 		if ($line =~ /^\+$Type\s*$Ident(?:\s+$Modifier)*\s*=\s*($zero_initializer)\s*;/) {
-			if (ERROR("GLOBAL_INITIALISERS",
-				  "do not initialise globals to $1\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/(^.$Type\s*$Ident(?:\s+$Modifier)*)\s*=\s*$zero_initializer\s*;/$1;/;
-			}
+			ERROR("GLOBAL_INITIALISERS",
+			      "do not initialise globals to $1\n" . $herecurr);
 		}
 # check for static initialisers.
 		if ($line =~ /^\+.*\bstatic\s.*=\s*($zero_initializer)\s*;/) {
-			if (ERROR("INITIALISED_STATIC",
-				  "do not initialise statics to $1\n" .
-				      $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/(\bstatic\s.*?)\s*=\s*$zero_initializer\s*;/$1;/;
-			}
+			ERROR("INITIALISED_STATIC",
+			      "do not initialise statics to $1\n" . $herecurr);
 		}
 
 # check for misordered declarations of char/short/int/long with signed/unsigned
@@ -3691,11 +3452,8 @@ sub process {
 			$new_type = "const $new_type" if ($type =~ /^const\b/);
 			$new_type =~ s/\s+/ /g;
 			$new_type = trim($new_type);
-			if (WARN("UNNECESSARY_INT",
-				 "Prefer '$new_type' over '$type' as the int is unnecessary\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\b\Q$type\E\b/$new_type/;
-			}
+			WARN("UNNECESSARY_INT",
+			     "Prefer '$new_type' over '$type' as the int is unnecessary\n" . $herecurr);
 		}
 
 # check for static const char * arrays.
@@ -3707,11 +3465,8 @@ sub process {
 
 # check for initialized const char arrays that should be static const
 		if ($line =~ /^\+\s*const\s+(char|unsigned\s+char|_*u8|(?:[us]_)?int8_t)\s+\w+\s*\[\s*(?:\w+\s*)?\]\s*=\s*"/) {
-			if (WARN("STATIC_CONST_CHAR_ARRAY",
-				 "const array should probably be static const\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/(^.\s*)const\b/${1}static const/;
-			}
+			WARN("STATIC_CONST_CHAR_ARRAY",
+			     "const array should probably be static const\n" . $herecurr);
 		}
 
 # check for static char foo[] = "bar" declarations.
@@ -3737,12 +3492,8 @@ sub process {
 # prefer 'static const <foo>' over 'const static <foo>' and 'static <foo> const'
 		if ($sline =~ /^\+\s*const\s+static\s+($Type)\b/ ||
 		    $sline =~ /^\+\s*static\s+($BasicType)\s+const\b/) {
-			if (WARN("STATIC_CONST",
-				 "Move const after static - use 'static const $1'\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\bconst\s+static\b/static const/;
-				$fixed[$fixlinenr] =~ s/\bstatic\s+($BasicType)\s+const\b/static const $1/;
-			}
+			WARN("STATIC_CONST",
+			     "Move const after static - use 'static const $1'\n" . $herecurr);
 		}
 
 # check for non-global char *foo[] = {"bar", ...} declarations.
@@ -3757,21 +3508,15 @@ sub process {
 			my $array = $1;
 			if ($line =~ m@\b(sizeof\s*\(\s*\Q$array\E\s*\)\s*/\s*sizeof\s*\(\s*\Q$array\E\s*\[\s*0\s*\]\s*\))@) {
 				my $array_div = $1;
-				if (WARN("ARRAY_SIZE",
-					 "Prefer ARRAY_SIZE($array)\n" . $herecurr) &&
-				    $fix) {
-					$fixed[$fixlinenr] =~ s/\Q$array_div\E/ARRAY_SIZE($array)/;
-				}
+				WARN("ARRAY_SIZE",
+				     "Prefer ARRAY_SIZE($array)\n" . $herecurr);
 			}
 		}
 
 # check for function declarations without arguments like "int foo()"
 		if ($line =~ /(\b$Type\s*$Ident)\s*\(\s*\)/) {
-			if (ERROR("FUNCTION_WITHOUT_ARGS",
-				  "Bad function definition - $1() should probably be $1(void)\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/(\b($Type)\s+($Ident))\s*\(\s*\)/$2 $3(void)/;
-			}
+			ERROR("FUNCTION_WITHOUT_ARGS",
+			      "Bad function definition - $1() should probably be $1(void)\n" . $herecurr);
 		}
 
 # check for new typedefs, only function parameters and sparse annotations
@@ -3801,15 +3546,8 @@ sub process {
 
 ##			print "1: from<$from> to<$to> ident<$ident>\n";
 			if ($from ne $to) {
-				if (ERROR("POINTER_LOCATION",
-					  "\"(foo$from)\" should be \"(foo$to)\"\n" .  $herecurr) &&
-				    $fix) {
-					my $sub_from = $ident;
-					my $sub_to = $ident;
-					$sub_to =~ s/\Q$from\E/$to/;
-					$fixed[$fixlinenr] =~
-					    s@\Q$sub_from\E@$sub_to@;
-				}
+				ERROR("POINTER_LOCATION",
+				      "\"(foo$from)\" should be \"(foo$to)\"\n" .  $herecurr);
 			}
 		}
 		while ($line =~ m{(\b$NonptrType(\s*(?:$Modifier\b\s*|\*\s*)+)($Ident))}g) {
@@ -3828,16 +3566,8 @@ sub process {
 
 ##			print "2: from<$from> to<$to> ident<$ident>\n";
 			if ($from ne $to && $ident !~ /^$Modifier$/) {
-				if (ERROR("POINTER_LOCATION",
-					  "\"foo${from}bar\" should be \"foo${to}bar\"\n" .  $herecurr) &&
-				    $fix) {
-
-					my $sub_from = $match;
-					my $sub_to = $match;
-					$sub_to =~ s/\Q$from\E/$to/;
-					$fixed[$fixlinenr] =~
-					    s@\Q$sub_from\E@$sub_to@;
-				}
+				ERROR("POINTER_LOCATION",
+				      "\"foo${from}bar\" should be \"foo${to}bar\"\n" .  $herecurr);
 			}
 		}
 
@@ -3847,48 +3577,21 @@ sub process {
 		    $sline =~ /$Type\s*$Ident\s*$balanced_parens\s*\{/ &&
 		    $sline !~ /\#\s*define\b.*do\s*\{/ &&
 		    $sline !~ /}/) {
-			if (ERROR("OPEN_BRACE",
-				  "open brace '{' following function definitions go on the next line\n" . $herecurr) &&
-			    $fix) {
-				fix_delete_line($fixlinenr, $rawline);
-				my $fixed_line = $rawline;
-				$fixed_line =~ /(^..*$Type\s*$Ident\(.*\)\s*)\{(.*)$/;
-				my $line1 = $1;
-				my $line2 = $2;
-				fix_insert_line($fixlinenr, ltrim($line1));
-				fix_insert_line($fixlinenr, "\+{");
-				if ($line2 !~ /^\s*$/) {
-					fix_insert_line($fixlinenr, "\+\t" . trim($line2));
-				}
-			}
+			ERROR("OPEN_BRACE",
+			      "open brace '{' following function definitions go on the next line\n" . $herecurr);
 		}
 
 # open braces for enum, union and struct go on the same line.
 		if ($line =~ /^.\s*{/ &&
 		    $prevline =~ /^.\s*(?:typedef\s+)?(enum|union|struct)(?:\s+$Ident)?\s*$/) {
-			if (ERROR("OPEN_BRACE",
-				  "open brace '{' following $1 go on the same line\n" . $hereprev) &&
-			    $fix && $prevline =~ /^\+/ && $line =~ /^\+/) {
-				fix_delete_line($fixlinenr - 1, $prevrawline);
-				fix_delete_line($fixlinenr, $rawline);
-				my $fixedline = rtrim($prevrawline) . " {";
-				fix_insert_line($fixlinenr, $fixedline);
-				$fixedline = $rawline;
-				$fixedline =~ s/^(.\s*)\{\s*/$1\t/;
-				if ($fixedline !~ /^\+\s*$/) {
-					fix_insert_line($fixlinenr, $fixedline);
-				}
-			}
+			ERROR("OPEN_BRACE",
+			      "open brace '{' following $1 go on the same line\n" . $hereprev);
 		}
 
 # missing space after union, struct or enum definition
 		if ($line =~ /^.\s*(?:typedef\s+)?(enum|union|struct)(?:\s+$Ident){1,2}[=\{]/) {
-			if (WARN("SPACING",
-				 "missing space after $1 definition\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/^(.\s*(?:typedef\s+)?(?:enum|union|struct)(?:\s+$Ident){1,2})([=\{])/$1 $2/;
-			}
+			WARN("SPACING",
+			     "missing space after $1 definition\n" . $herecurr);
 		}
 
 # check for spacing round square brackets; allowed:
@@ -3900,12 +3603,8 @@ sub process {
 			if ($prefix !~ /$Type\s+$/ &&
 			    ($where != 0 || $prefix !~ /^.\s+$/) &&
 			    $prefix !~ /[{,:]\s+$/) {
-				if (ERROR("BRACKET_SPACE",
-					  "space prohibited before open square bracket '['\n" . $herecurr) &&
-				    $fix) {
-				    $fixed[$fixlinenr] =~
-					s/^(\+.*?)\s+\[/$1\[/;
-				}
+				ERROR("BRACKET_SPACE",
+				      "space prohibited before open square bracket '['\n" . $herecurr);
 			}
 		}
 
@@ -3935,20 +3634,13 @@ sub process {
 			} elsif ($ctx =~ /$Type$/) {
 
 			} else {
-				if (WARN("SPACING",
-					 "space prohibited between function name and open parenthesis '('\n" . $herecurr) &&
-					     $fix) {
-					$fixed[$fixlinenr] =~
-					    s/\b$name\s+\(/$name\(/;
-				}
+				WARN("SPACING",
+				     "space prohibited between function name and open parenthesis '('\n" . $herecurr);
 			}
 		}
 
 # Check operator spacing.
 		if (!($line=~/\#\s*include/)) {
-			my $fixed_line = "";
-			my $line_fixed = 0;
-
 			my $ops = qr{
 				<<=|>>=|<=|>=|==|!=|
 				\+=|-=|\*=|\/=|%=|\^=|\|=|&=|
@@ -3963,24 +3655,10 @@ sub process {
 ##				print("el: <$el>\n");
 ##			}
 
-			my @fix_elements = ();
 			my $off = 0;
-
-			foreach my $el (@elements) {
-				push(@fix_elements, substr($rawline, $off, length($el)));
-				$off += length($el);
-			}
-
-			$off = 0;
-
 			my $blank = copy_spacing($opline);
-			my $last_after = -1;
 
 			for (my $n = 0; $n < $#elements; $n += 2) {
-
-				my $good = $fix_elements[$n] . $fix_elements[$n + 1];
-
-##				print("n: <$n> good: <$good>\n");
 
 				$off += length($elements[$n]);
 
@@ -4038,11 +3716,8 @@ sub process {
 				} elsif ($op eq ';') {
 					if ($ctx !~ /.x[WEBC]/ &&
 					    $cc !~ /^\\/ && $cc !~ /^;/) {
-						if (ERROR("SPACING",
-							  "space required after that '$op' $at\n" . $hereptr)) {
-							$good = $fix_elements[$n] . trim($fix_elements[$n + 1]) . " ";
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "space required after that '$op' $at\n" . $hereptr);
 					}
 
 				# // is a comment
@@ -4056,44 +3731,19 @@ sub process {
 				#   ->
 				} elsif ($op eq '->') {
 					if ($ctx =~ /Wx.|.xW/) {
-						if (ERROR("SPACING",
-							  "spaces prohibited around that '$op' $at\n" . $hereptr)) {
-							$good = rtrim($fix_elements[$n]) . trim($fix_elements[$n + 1]);
-							if (defined $fix_elements[$n + 2]) {
-								$fix_elements[$n + 2] =~ s/^\s+//;
-							}
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "spaces prohibited around that '$op' $at\n" . $hereptr);
 					}
 
 				# , must not have a space before and must have a space on the right.
 				} elsif ($op eq ',') {
-					my $rtrim_before = 0;
-					my $space_after = 0;
 					if ($ctx =~ /Wx./) {
-						if (ERROR("SPACING",
-							  "space prohibited before that '$op' $at\n" . $hereptr)) {
-							$line_fixed = 1;
-							$rtrim_before = 1;
-						}
+						ERROR("SPACING",
+						      "space prohibited before that '$op' $at\n" . $hereptr);
 					}
 					if ($ctx !~ /.x[WEC]/ && $cc !~ /^}/) {
-						if (ERROR("SPACING",
-							  "space required after that '$op' $at\n" . $hereptr)) {
-							$line_fixed = 1;
-							$last_after = $n;
-							$space_after = 1;
-						}
-					}
-					if ($rtrim_before || $space_after) {
-						if ($rtrim_before) {
-							$good = rtrim($fix_elements[$n]) . trim($fix_elements[$n + 1]);
-						} else {
-							$good = $fix_elements[$n] . trim($fix_elements[$n + 1]);
-						}
-						if ($space_after) {
-							$good .= " ";
-						}
+						ERROR("SPACING",
+						      "space required after that '$op' $at\n" . $hereptr);
 					}
 
 				# '*' as part of a type definition -- reported already.
@@ -4107,54 +3757,31 @@ sub process {
 					 $opv eq '*U' || $opv eq '-U' ||
 					 $opv eq '&U' || $opv eq '&&U') {
 					if ($ctx !~ /[WEBC]x./ && $ca !~ /(?:\)|!|~|\*|-|\&|\||\+\+|\-\-|\{)$/) {
-						if (ERROR("SPACING",
-							  "space required before that '$op' $at\n" . $hereptr)) {
-							if ($n != $last_after + 2) {
-								$good = $fix_elements[$n] . " " . ltrim($fix_elements[$n + 1]);
-								$line_fixed = 1;
-							}
-						}
+						ERROR("SPACING",
+						      "space required before that '$op' $at\n" . $hereptr);
 					}
 					if ($op eq '*' && $cc =~/\s*$Modifier\b/) {
 						# A unary '*' may be const
 
 					} elsif ($ctx =~ /.xW/) {
-						if (ERROR("SPACING",
-							  "space prohibited after that '$op' $at\n" . $hereptr)) {
-							$good = $fix_elements[$n] . rtrim($fix_elements[$n + 1]);
-							if (defined $fix_elements[$n + 2]) {
-								$fix_elements[$n + 2] =~ s/^\s+//;
-							}
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "space prohibited after that '$op' $at\n" . $hereptr);
 					}
 
 				# unary ++ and unary -- are allowed no space on one side.
 				} elsif ($op eq '++' or $op eq '--') {
 					if ($ctx !~ /[WEOBC]x[^W]/ && $ctx !~ /[^W]x[WOBEC]/) {
-						if (ERROR("SPACING",
-							  "space required one side of that '$op' $at\n" . $hereptr)) {
-							$good = $fix_elements[$n] . trim($fix_elements[$n + 1]) . " ";
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "space required one side of that '$op' $at\n" . $hereptr);
 					}
 					if ($ctx =~ /Wx[BE]/ ||
 					    ($ctx =~ /Wx./ && $cc =~ /^;/)) {
-						if (ERROR("SPACING",
-							  "space prohibited before that '$op' $at\n" . $hereptr)) {
-							$good = rtrim($fix_elements[$n]) . trim($fix_elements[$n + 1]);
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "space prohibited before that '$op' $at\n" . $hereptr);
 					}
 					if ($ctx =~ /ExW/) {
-						if (ERROR("SPACING",
-							  "space prohibited after that '$op' $at\n" . $hereptr)) {
-							$good = $fix_elements[$n] . trim($fix_elements[$n + 1]);
-							if (defined $fix_elements[$n + 2]) {
-								$fix_elements[$n + 2] =~ s/^\s+//;
-							}
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "space prohibited after that '$op' $at\n" . $hereptr);
 					}
 
 				# << and >> may either have or not have spaces both sides
@@ -4165,40 +3792,24 @@ sub process {
 					 $op eq '%')
 				{
 					if ($check) {
-						if (defined $fix_elements[$n + 2] && $ctx !~ /[EW]x[EW]/) {
-							if (CHK("SPACING",
-								"spaces preferred around that '$op' $at\n" . $hereptr)) {
-								$good = rtrim($fix_elements[$n]) . " " . trim($fix_elements[$n + 1]) . " ";
-								$fix_elements[$n + 2] =~ s/^\s+//;
-								$line_fixed = 1;
-							}
-						} elsif (!defined $fix_elements[$n + 2] && $ctx !~ /Wx[OE]/) {
-							if (CHK("SPACING",
-								"space preferred before that '$op' $at\n" . $hereptr)) {
-								$good = rtrim($fix_elements[$n]) . " " . trim($fix_elements[$n + 1]);
-								$line_fixed = 1;
-							}
+						if (defined $elements[$n + 2] && $ctx !~ /[EW]x[EW]/) {
+							CHK("SPACING",
+							    "spaces preferred around that '$op' $at\n" . $hereptr);
+						} elsif (!defined $elements[$n + 2] && $ctx !~ /Wx[OE]/) {
+							CHK("SPACING",
+							    "space preferred before that '$op' $at\n" . $hereptr);
 						}
 					} elsif ($ctx =~ /Wx[^WCE]|[^WCE]xW/) {
-						if (ERROR("SPACING",
-							  "need consistent spacing around '$op' $at\n" . $hereptr)) {
-							$good = rtrim($fix_elements[$n]) . " " . trim($fix_elements[$n + 1]) . " ";
-							if (defined $fix_elements[$n + 2]) {
-								$fix_elements[$n + 2] =~ s/^\s+//;
-							}
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "need consistent spacing around '$op' $at\n" . $hereptr);
 					}
 
 				# A colon needs no spaces before when it is
 				# terminating a case value or a label.
 				} elsif ($opv eq ':C' || $opv eq ':L') {
 					if ($ctx =~ /Wx./) {
-						if (ERROR("SPACING",
-							  "space prohibited before that '$op' $at\n" . $hereptr)) {
-							$good = rtrim($fix_elements[$n]) . trim($fix_elements[$n + 1]);
-							$line_fixed = 1;
-						}
+						ERROR("SPACING",
+						      "space prohibited before that '$op' $at\n" . $hereptr);
 					}
 
 				# All the others need spaces both sides.
@@ -4227,42 +3838,18 @@ sub process {
 						my $msg_level = \&ERROR;
 						$msg_level = \&CHK if (($op eq '?:' || $op eq '?' || $op eq ':') && $ctx =~ /VxV/);
 
-						if (&{$msg_level}("SPACING",
-								  "spaces required around that '$op' $at\n" . $hereptr)) {
-							$good = rtrim($fix_elements[$n]) . " " . trim($fix_elements[$n + 1]) . " ";
-							if (defined $fix_elements[$n + 2]) {
-								$fix_elements[$n + 2] =~ s/^\s+//;
-							}
-							$line_fixed = 1;
-						}
+						&{$msg_level}("SPACING",
+							      "spaces required around that '$op' $at\n" . $hereptr);
 					}
 				}
 				$off += length($elements[$n + 1]);
-
-##				print("n: <$n> GOOD: <$good>\n");
-
-				$fixed_line = $fixed_line . $good;
 			}
-
-			if (($#elements % 2) == 0) {
-				$fixed_line = $fixed_line . $fix_elements[$#elements];
-			}
-
-			if ($fix && $line_fixed && $fixed_line ne $fixed[$fixlinenr]) {
-				$fixed[$fixlinenr] = $fixed_line;
-			}
-
-
 		}
 
 # check for whitespace before a non-naked semicolon
 		if ($line =~ /^\+.*\S\s+;\s*$/) {
-			if (WARN("SPACING",
-				 "space prohibited before semicolon\n" . $herecurr) &&
-			    $fix) {
-				1 while $fixed[$fixlinenr] =~
-				    s/^(\+.*\S)\s+;/$1;/;
-			}
+			WARN("SPACING",
+			     "space prohibited before semicolon\n" . $herecurr);
 		}
 
 # check for multiple assignments
@@ -4274,61 +3861,38 @@ sub process {
 #need space before brace following if, while, etc
 		if (($line =~ /\(.*\)\{/ && $line !~ /\($Type\)\{/) ||
 		    $line =~ /\b(?:else|do)\{/) {
-			if (ERROR("SPACING",
-				  "space required before the open brace '{'\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/^(\+.*(?:do|else|\)))\{/$1 {/;
-			}
+			ERROR("SPACING",
+			      "space required before the open brace '{'\n" . $herecurr);
 		}
 
 # closing brace should have a space following it when it has anything
 # on the line
 		if ($line =~ /}(?!(?:,|;|\)|\}))\S/) {
-			if (ERROR("SPACING",
-				  "space required after that close brace '}'\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/}((?!(?:,|;|\)))\S)/} $1/;
-			}
+			ERROR("SPACING",
+			      "space required after that close brace '}'\n" . $herecurr);
 		}
 
 # check spacing on square brackets
 		if ($line =~ /\[\s/ && $line !~ /\[\s*$/) {
-			if (ERROR("SPACING",
-				  "space prohibited after that open square bracket '['\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/\[\s+/\[/;
-			}
+			ERROR("SPACING",
+			      "space prohibited after that open square bracket '['\n" . $herecurr);
 		}
 		if ($line =~ /\s\]/) {
-			if (ERROR("SPACING",
-				  "space prohibited before that close square bracket ']'\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/\s+\]/\]/;
-			}
+			ERROR("SPACING",
+			      "space prohibited before that close square bracket ']'\n" . $herecurr);
 		}
 
 # check spacing on parentheses
 		if ($line =~ /\(\s/ && $line !~ /\(\s*(?:\\)?$/ &&
 		    $line !~ /for\s*\(\s+;/) {
-			if (ERROR("SPACING",
-				  "space prohibited after that open parenthesis '('\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/\(\s+/\(/;
-			}
+			ERROR("SPACING",
+			      "space prohibited after that open parenthesis '('\n" . $herecurr);
 		}
 		if ($line =~ /(\s+)\)/ && $line !~ /^.\s*\)/ &&
 		    $line !~ /for\s*\(.*;\s+\)/ &&
 		    $line !~ /:\s+\)/) {
-			if (ERROR("SPACING",
-				  "space prohibited before that close parenthesis ')'\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/\s+\)/\)/;
-			}
+			ERROR("SPACING",
+			      "space prohibited before that close parenthesis ')'\n" . $herecurr);
 		}
 
 # check unnecessary parentheses around addressof/dereference single $Lvals
@@ -4336,11 +3900,8 @@ sub process {
 
 		while ($line =~ /(?:[^&]&\s*|\*)\(\s*($Ident\s*(?:$Member\s*)+)\s*\)/g) {
 			my $var = $1;
-			if (CHK("UNNECESSARY_PARENTHESES",
-				"Unnecessary parentheses around $var\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\(\s*\Q$var\E\s*\)/$var/;
-			}
+			CHK("UNNECESSARY_PARENTHESES",
+			    "Unnecessary parentheses around $var\n" . $herecurr);
 		}
 
 # check for unnecessary parentheses around function pointer uses
@@ -4348,13 +3909,8 @@ sub process {
 # but not "if (foo->bar) (" to avoid some false positives
 		if ($line =~ /(\bif\s*|)(\(\s*$Ident\s*(?:$Member\s*)+\))[ \t]*\(/ && $1 !~ /^if/) {
 			my $var = $2;
-			if (CHK("UNNECESSARY_PARENTHESES",
-				"Unnecessary parentheses around function pointer $var\n" . $herecurr) &&
-			    $fix) {
-				my $var2 = deparenthesize($var);
-				$var2 =~ s/\s//g;
-				$fixed[$fixlinenr] =~ s/\Q$var\E/$var2/;
-			}
+			CHK("UNNECESSARY_PARENTHESES",
+			    "Unnecessary parentheses around function pointer $var\n" . $herecurr);
 		}
 
 # check that goto labels aren't indented (allow a single space indentation)
@@ -4364,12 +3920,8 @@ sub process {
 		if ($sline =~ /^.\s+[A-Za-z_][A-Za-z\d_]*:(?!\s*\d+)/ &&
 		    $sline !~ /^. [A-Za-z\d_][A-Za-z\d_]*:/ &&
 		    $sline !~ /^.\s+default:/) {
-			if (WARN("INDENTED_LABEL",
-				 "labels should not be indented\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/^(.)\s+/$1/;
-			}
+			WARN("INDENTED_LABEL",
+			     "labels should not be indented\n" . $herecurr);
 		}
 
 # check if a statement with a comma should be two statements like:
@@ -4431,38 +3983,20 @@ sub process {
 #	only fix matches surrounded by parentheses to avoid incorrect
 #	conversions like "FOO < baz() + 5" being "misfixed" to "baz() > FOO + 5"
 		if ($perl_version_ok &&
-		    $line =~ /^\+(.*)\b($Constant|[A-Z_][A-Z0-9_]*)\s*($Compare)\s*($LvalOrFunc)/) {
+		    $line =~ /^\+(.*)\b(?:$Constant|[A-Z_][A-Z0-9_]*)\s*$Compare\s*($LvalOrFunc)/) {
 			my $lead = $1;
-			my $const = $2;
-			my $comp = $3;
-			my $to = $4;
-			my $newcomp = $comp;
+			my $to = $2;
 			if ($lead !~ /(?:$Operators|\.)\s*$/ &&
-			    $to !~ /^(?:Constant|[A-Z_][A-Z0-9_]*)$/ &&
-			    WARN("CONSTANT_COMPARISON",
-				 "Comparisons should place the constant on the right side of the test\n" . $herecurr) &&
-			    $fix) {
-				if ($comp eq "<") {
-					$newcomp = ">";
-				} elsif ($comp eq "<=") {
-					$newcomp = ">=";
-				} elsif ($comp eq ">") {
-					$newcomp = "<";
-				} elsif ($comp eq ">=") {
-					$newcomp = "<=";
-				}
-				$fixed[$fixlinenr] =~ s/\(\s*\Q$const\E\s*$Compare\s*\Q$to\E\s*\)/($to $newcomp $const)/;
+			    $to !~ /^(?:Constant|[A-Z_][A-Z0-9_]*)$/) {
+				WARN("CONSTANT_COMPARISON",
+				     "Comparisons should place the constant on the right side of the test\n" . $herecurr);
 			}
 		}
 
 # Need a space before open parenthesis after if, while etc
 		if ($line =~ /\b(if|while|for|switch)\(/) {
-			if (ERROR("SPACING",
-				  "space required before the open parenthesis '('\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/\b(if|while|for|switch)\(/$1 \(/;
-			}
+			ERROR("SPACING",
+			      "space required before the open parenthesis '('\n" . $herecurr);
 		}
 
 # Check for illegal assignment in if conditional -- and check for trailing
@@ -4494,30 +4028,8 @@ sub process {
 			my ($s, $c) = ($stat, $cond);
 
 			if ($c =~ /\bif\s*\(.*[^<>!=]=[^=].*/s) {
-				if (ERROR("ASSIGN_IN_IF",
-					  "do not use assignment in if condition\n" . $herecurr) &&
-				    $fix && $perl_version_ok) {
-					if ($rawline =~ /^\+(\s+)if\s*\(\s*(\!)?\s*\(\s*(($Lval)\s*=\s*$LvalOrFunc)\s*\)\s*(?:($Compare)\s*($FuncArg))?\s*\)\s*(\{)?\s*$/) {
-						my $space = $1;
-						my $not = $2;
-						my $statement = $3;
-						my $assigned = $4;
-						my $test = $8;
-						my $against = $9;
-						my $brace = $15;
-						fix_delete_line($fixlinenr, $rawline);
-						fix_insert_line($fixlinenr, "$space$statement;");
-						my $newline = "${space}if (";
-						$newline .= '!' if defined($not);
-						$newline .= '(' if (defined $not && defined($test) && defined($against));
-						$newline .= "$assigned";
-						$newline .= " $test $against" if (defined($test) && defined($against));
-						$newline .= ')' if (defined $not && defined($test) && defined($against));
-						$newline .= ')';
-						$newline .= " {" if (defined($brace));
-						fix_insert_line($fixlinenr + 1, $newline);
-					}
-				}
+				ERROR("ASSIGN_IN_IF",
+				      "do not use assignment in if condition\n" . $herecurr);
 			}
 
 			# Find out what is on the end of the line after the
@@ -4590,20 +4102,8 @@ sub process {
 		# indent level to be relevant to each other.
 		if ($prevline=~/}\s*$/ and $line=~/^.\s*else\s*/ &&
 		    $previndent == $indent) {
-			if (ERROR("ELSE_AFTER_BRACE",
-				  "else should follow close brace '}'\n" . $hereprev) &&
-			    $fix && $prevline =~ /^\+/ && $line =~ /^\+/) {
-				fix_delete_line($fixlinenr - 1, $prevrawline);
-				fix_delete_line($fixlinenr, $rawline);
-				my $fixedline = $prevrawline;
-				$fixedline =~ s/}\s*$//;
-				if ($fixedline !~ /^\+\s*$/) {
-					fix_insert_line($fixlinenr, $fixedline);
-				}
-				$fixedline = $rawline;
-				$fixedline =~ s/^(.\s*)else/$1} else/;
-				fix_insert_line($fixlinenr, $fixedline);
-			}
+			ERROR("ELSE_AFTER_BRACE",
+			      "else should follow close brace '}'\n" . $hereprev);
 		}
 
 		if ($prevline=~/}\s*$/ and $line=~/^.\s*while\s*/ &&
@@ -4616,18 +4116,8 @@ sub process {
 			$s =~ s/\n.*//g;
 
 			if ($s =~ /^\s*;/) {
-				if (ERROR("WHILE_AFTER_BRACE",
-					  "while should follow close brace '}'\n" . $hereprev) &&
-				    $fix && $prevline =~ /^\+/ && $line =~ /^\+/) {
-					fix_delete_line($fixlinenr - 1, $prevrawline);
-					fix_delete_line($fixlinenr, $rawline);
-					my $fixedline = $prevrawline;
-					my $trailing = $rawline;
-					$trailing =~ s/^\+//;
-					$trailing = trim($trailing);
-					$fixedline =~ s/}\s*$/} $trailing/;
-					fix_insert_line($fixlinenr, $fixedline);
-				}
+				ERROR("WHILE_AFTER_BRACE",
+				      "while should follow close brace '}'\n" . $hereprev);
 			}
 		}
 
@@ -4896,18 +4386,12 @@ sub process {
 
 # check for unnecessary blank lines around braces
 		if (($line =~ /^.\s*}\s*$/ && $prevrawline =~ /^.\s*$/)) {
-			if (CHK("BRACES",
-				"Blank lines aren't necessary before a close brace '}'\n" . $hereprev) &&
-			    $fix && $prevrawline =~ /^\+/) {
-				fix_delete_line($fixlinenr - 1, $prevrawline);
-			}
+			CHK("BRACES",
+			    "Blank lines aren't necessary before a close brace '}'\n" . $hereprev);
 		}
 		if (($rawline =~ /^.\s*$/ && $prevline =~ /^..*{\s*$/)) {
-			if (CHK("BRACES",
-				"Blank lines aren't necessary after an open brace '{'\n" . $hereprev) &&
-			    $fix) {
-				fix_delete_line($fixlinenr, $rawline);
-			}
+			CHK("BRACES",
+			    "Blank lines aren't necessary after an open brace '{'\n" . $hereprev);
 		}
 
 # no volatiles please
@@ -4937,38 +4421,21 @@ sub process {
 
 # check for spaces before a quoted newline
 		if ($rawline =~ /^.*\".*\s\\n/) {
-			if (WARN("QUOTED_WHITESPACE_BEFORE_NEWLINE",
-				 "unnecessary whitespace before a quoted newline\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/^(\+.*\".*)\s+\\n/$1\\n/;
-			}
-
+			WARN("QUOTED_WHITESPACE_BEFORE_NEWLINE",
+			     "unnecessary whitespace before a quoted newline\n" . $herecurr);
 		}
 
 # concatenated string without spaces between elements
 		if ($line =~ /$String[A-Z_]/ ||
 		    ($line =~ /([A-Za-z0-9_]+)$String/ && $1 !~ /^[Lu]$/)) {
-			if (CHK("CONCATENATED_STRING",
-				"Concatenated strings should use spaces between elements\n" . $herecurr) &&
-			    $fix) {
-				while ($line =~ /($String)/g) {
-					my $extracted_string = substr($rawline, $-[0], $+[0] - $-[0]);
-					$fixed[$fixlinenr] =~ s/\Q$extracted_string\E([A-Za-z0-9_])/$extracted_string $1/;
-					$fixed[$fixlinenr] =~ s/([A-Za-z0-9_])\Q$extracted_string\E/$1 $extracted_string/;
-				}
-			}
+			CHK("CONCATENATED_STRING",
+			    "Concatenated strings should use spaces between elements\n" . $herecurr);
 		}
 
 # uncoalesced string fragments
 		if ($line =~ /$String\s*[Lu]?"/) {
-			if (WARN("STRING_FRAGMENTS",
-				 "Consecutive strings are generally better as a single string\n" . $herecurr) &&
-			    $fix) {
-				while ($line =~ /($String)(?=\s*")/g) {
-					my $extracted_string = substr($rawline, $-[0], $+[0] - $-[0]);
-					$fixed[$fixlinenr] =~ s/\Q$extracted_string\E\s*"/substr($extracted_string, 0, -1)/e;
-				}
-			}
+			WARN("STRING_FRAGMENTS",
+			     "Consecutive strings are generally better as a single string\n" . $herecurr);
 		}
 
 # check for non-standard and hex prefixed decimal printf formats
@@ -5020,30 +4487,8 @@ sub process {
 			my $expr = '\s*\(\s*' . $tested . '\s*\)\s*;';
 			if ($line =~ /\b(kfree|usb_free_urb|debugfs_remove(?:_recursive)?|(?:kmem_cache|mempool|dma_pool)_destroy)$expr/) {
 				my $func = $1;
-				if (WARN('NEEDLESS_IF',
-					 "$func(NULL) is safe and this check is probably not required\n" . $hereprev) &&
-				    $fix) {
-					my $do_fix = 1;
-					my $leading_tabs = "";
-					my $new_leading_tabs = "";
-					if ($lines[$linenr - 2] =~ /^\+(\t*)if\s*\(\s*$tested\s*\)\s*$/) {
-						$leading_tabs = $1;
-					} else {
-						$do_fix = 0;
-					}
-					if ($lines[$linenr - 1] =~ /^\+(\t+)$func\s*\(\s*$tested\s*\)\s*;\s*$/) {
-						$new_leading_tabs = $1;
-						if (length($leading_tabs) + 1 ne length($new_leading_tabs)) {
-							$do_fix = 0;
-						}
-					} else {
-						$do_fix = 0;
-					}
-					if ($do_fix) {
-						fix_delete_line($fixlinenr - 1, $prevrawline);
-						$fixed[$fixlinenr] =~ s/^\+$new_leading_tabs/\+$leading_tabs/;
-					}
-				}
+				WARN('NEEDLESS_IF',
+				     "$func(NULL) is safe and this check is probably not required\n" . $hereprev);
 			}
 		}
 
@@ -5059,13 +4504,8 @@ sub process {
 				my $pspec = $1;
 				my $h = $2;
 				my $lineoff = substr($stat_real, 0, $-[1]) =~ tr@\n@@;
-				if (WARN("UNNECESSARY_MODIFIER",
-					 "Integer promotion: Using '$h' in '$pspec' is unnecessary\n" . "$here\n$stat_real\n") &&
-				    $fix && $fixed[$fixlinenr + $lineoff] =~ /^\+/) {
-					my $nspec = $pspec;
-					$nspec =~ s/h//g;
-					$fixed[$fixlinenr + $lineoff] =~ s/\Q$pspec\E/$nspec/;
-				}
+				WARN("UNNECESSARY_MODIFIER",
+				     "Integer promotion: Using '$h' in '$pspec' is unnecessary\n" . "$here\n$stat_real\n");
 			}
 		}
 
@@ -5079,13 +4519,8 @@ sub process {
 
 # warn about spacing in #ifdefs
 		if ($line =~ /^.\s*\#\s*(ifdef|ifndef|elif)\s\s+/) {
-			if (ERROR("SPACING",
-				  "exactly one space required after that #$1\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~
-				    s/^(.\s*\#\s*(ifdef|ifndef|elif))\s{2,}/$1 /;
-			}
-
+			ERROR("SPACING",
+			      "exactly one space required after that #$1\n" . $herecurr);
 		}
 
 # check that the storage class is not after a type
@@ -5112,12 +4547,8 @@ sub process {
 
 # Check for __inline__ and __inline, prefer inline
 		if ($line =~ /\b(__inline__|__inline)\b/) {
-			if (WARN("INLINE",
-				 "plain inline is preferred over $1\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\b(__inline__|__inline)\b/inline/;
-
-			}
+			WARN("INLINE",
+			     "plain inline is preferred over $1\n" . $herecurr);
 		}
 
 # Check for compiler attributes
@@ -5165,15 +4596,8 @@ sub process {
 					} else {
 						$new = "$new$params";
 					}
-					if (WARN("PREFER_DEFINED_ATTRIBUTE_MACRO",
-						 "Prefer $new over __attribute__(($orig_attr$params))\n" . $herecurr) &&
-					    $fix) {
-						my $remove = "\Q$orig_attr\E" . '\s*' . "\Q$params\E" . '(?:\s*,\s*)?';
-						$fixed[$fixlinenr] =~ s/$remove//;
-						$fixed[$fixlinenr] =~ s/\b__attribute__/$new __attribute__/;
-						$fixed[$fixlinenr] =~ s/\}\Q$new\E/} $new/;
-						$fixed[$fixlinenr] =~ s/ __attribute__\s*\(\s*\(\s*\)\s*\)//;
-					}
+					WARN("PREFER_DEFINED_ATTRIBUTE_MACRO",
+					     "Prefer $new over __attribute__(($orig_attr$params))\n" . $herecurr);
 				}
 			}
 
@@ -5198,19 +4622,14 @@ sub process {
 			my $cast = $1;
 			my $const = $2;
 			my $suffix = "";
-			my $newconst = $const;
-			$newconst =~ s/${Int_type}$//;
 			$suffix .= 'U' if ($cast =~ /\bunsigned\b/);
 			if ($cast =~ /\blong\s+long\b/) {
 			    $suffix .= 'LL';
 			} elsif ($cast =~ /\blong\b/) {
 			    $suffix .= 'L';
 			}
-			if (WARN("TYPECAST_INT_CONSTANT",
-				 "Unnecessary typecast of c90 int constant - '$cast$const' could be '$const$suffix'\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\Q$cast\E$const\b/$newconst$suffix/;
-			}
+			WARN("TYPECAST_INT_CONSTANT",
+			     "Unnecessary typecast of c90 int constant - '$cast$const' could be '$const$suffix'\n" . $herecurr);
 		}
 
 # check for sizeof(&)
@@ -5221,11 +4640,8 @@ sub process {
 
 # check for sizeof without parenthesis
 		if ($line =~ /\bsizeof\s+((?:\*\s*|)$Lval|$Type(?:\s+$Lval|))/) {
-			if (WARN("SIZEOF_PARENTHESIS",
-				 "sizeof $1 should be sizeof($1)\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\bsizeof\s+((?:\*\s*|)$Lval|$Type(?:\s+$Lval|))/"sizeof(" . trim($1) . ")"/ex;
-			}
+			WARN("SIZEOF_PARENTHESIS",
+			     "sizeof $1 should be sizeof($1)\n" . $herecurr);
 		}
 
 # Check for misused memsets
@@ -5263,11 +4679,8 @@ sub process {
 # check for new externs in .h files.
 		if ($realfile =~ /\.h$/ &&
 		    $line =~ /^\+\s*(extern\s+)$Type\s*$Ident\s*\(/s) {
-			if (CHK("AVOID_EXTERNS",
-				"extern prototypes should be avoided in .h files\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/(.*)\bextern\b\s*(.*)/$1$2/;
-			}
+			CHK("AVOID_EXTERNS",
+			    "extern prototypes should be avoided in .h files\n" . $herecurr);
 		}
 
 # check for new externs in .c files.
@@ -5366,11 +4779,8 @@ sub process {
 
 # check for multiple semicolons
 		if ($line =~ /;\s*;\s*$/) {
-			if (WARN("ONE_SEMICOLON",
-				 "Statements terminations use 1 semicolon\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/(\s*;\s*){2,}$/;/g;
-			}
+			WARN("ONE_SEMICOLON",
+			     "Statements terminations use 1 semicolon\n" . $herecurr);
 		}
 
 		my @fallthroughs = (
@@ -5407,11 +4817,8 @@ sub process {
 
 # check for gcc specific __FUNCTION__
 		if ($line =~ /\b__FUNCTION__\b/) {
-			if (WARN("USE_FUNC",
-				 "__func__ should be used instead of gcc specific __FUNCTION__\n"  . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\b__FUNCTION__\b/__func__/g;
-			}
+			WARN("USE_FUNC",
+			     "__func__ should be used instead of gcc specific __FUNCTION__\n"  . $herecurr);
 		}
 
 # check for uses of __DATE__, __TIME__, __TIMESTAMP__
@@ -5494,11 +4901,8 @@ sub process {
 		while ($line =~ m{\b($multi_mode_perms_string_search)\b}g) {
 			my $oval = $1;
 			my $octal = perms_to_octal($oval);
-			if (WARN("SYMBOLIC_PERMS",
-				 "Symbolic permissions '$oval' are not preferred. Consider using octal permissions '$octal'.\n" . $herecurr) &&
-			    $fix) {
-				$fixed[$fixlinenr] =~ s/\Q$oval\E/$octal/;
-			}
+			WARN("SYMBOLIC_PERMS",
+			     "Symbolic permissions '$oval' are not preferred. Consider using octal permissions '$octal'.\n" . $herecurr);
 		}
 	}
 
@@ -5564,66 +4968,6 @@ sub process {
 		print "total: $cnt_error errors, $cnt_warn warnings, " .
 			(($check)? "$cnt_chk checks, " : "") .
 			"$cnt_lines lines checked\n";
-	}
-
-	if ($quiet == 0) {
-		# If there were any defects found and not already fixing them
-		if (!$clean and !$fix) {
-			print << "EOM"
-
-NOTE: For some of the reported defects, checkpatch may be able to
-      mechanically convert to the typical style using --fix or --fix-inplace.
-EOM
-		}
-		# If there were whitespace errors which cleanpatch can fix
-		# then suggest that.
-		if ($rpt_cleaners) {
-			$rpt_cleaners = 0;
-			print << "EOM"
-
-NOTE: Whitespace errors detected.
-      You may wish to use scripts/cleanpatch or scripts/cleanfile
-EOM
-		}
-	}
-
-	if ($clean == 0 && $fix &&
-	    ("@rawlines" ne "@fixed" ||
-	     $#fixed_inserted >= 0 || $#fixed_deleted >= 0)) {
-		my $newfile = $filename;
-		$newfile .= ".EXPERIMENTAL-checkpatch-fixes" if (!$fix_inplace);
-		my $linecount = 0;
-		my $f;
-
-		@fixed = fix_inserted_deleted_lines(\@fixed, \@fixed_inserted, \@fixed_deleted);
-
-		open($f, '>', $newfile)
-		    or die "$P: Can't open $newfile for write\n";
-		foreach my $fixed_line (@fixed) {
-			$linecount++;
-			if ($file) {
-				if ($linecount > 3) {
-					$fixed_line =~ s/^\+//;
-					print $f $fixed_line . "\n";
-				}
-			} else {
-				print $f $fixed_line . "\n";
-			}
-		}
-		close($f);
-
-		if (!$quiet) {
-			print << "EOM";
-
-Wrote EXPERIMENTAL --fix correction(s) to '$newfile'
-
-Do _NOT_ trust the results written to this file.
-Do _NOT_ submit these changes without inspecting them for correctness.
-
-This EXPERIMENTAL file is simply a convenience to help rewrite patches.
-No warranties, expressed or implied...
-EOM
-		}
 	}
 
 	if ($quiet == 0) {
