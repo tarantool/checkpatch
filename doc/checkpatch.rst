@@ -85,11 +85,6 @@ Available options:
    Treat FILE as a regular source file.  This option must be used when running
    checkpatch on source files in the kernel.
 
- - --subjective,  --strict
-
-   Enable stricter tests in checkpatch.  By default the tests emitted as CHECK
-   do not activate by default.  Use this flag to activate the CHECK tests.
-
  - --list-types
 
    Every message emitted by checkpatch has an associated TYPE.  Add this flag
@@ -123,11 +118,6 @@ Available options:
 
    Set the max line length (default 100).  If a line exceeds the specified
    length, a LONG_LINE message is emitted.
-
-
-   The message level is different for patch and file contexts.  For patches,
-   a WARNING is emitted.  While a milder CHECK is emitted for files.  So for
-   file contexts, the --strict flag must also be enabled.
 
  - --tab-size=n
 
@@ -177,26 +167,6 @@ Available options:
  - -h, --help, --version
 
    Display the help text.
-
-Message Levels
-==============
-
-Messages in checkpatch are divided into three levels. The levels of messages
-in checkpatch denote the severity of the error. They are:
-
- - ERROR
-
-   This is the most strict level.  Messages of type ERROR must be taken
-   seriously as they denote things that are very likely to be wrong.
-
- - WARNING
-
-   This is the next stricter level.  Messages of type WARNING requires a
-   more careful review.  But it is milder than an ERROR.
-
- - CHECK
-
-   This is the mildest level.  These are things which may require some thought.
 
 Type Descriptions
 =================
@@ -604,7 +574,7 @@ Functions and Variables
     as it depends on patch context providing the function name.
 
   **FUNCTION_ARGUMENTS**
-    This warning is emitted due to any of the following reasons:
+    This error is emitted due to any of the following reasons:
 
       1. Arguments for the function declaration do not follow
          the identifier name.  Example::
