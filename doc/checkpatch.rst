@@ -225,6 +225,9 @@ Comments
     C99 style single line comments (//) should not be used.
     Prefer the block comment style instead.
 
+  **UNCOMMENTED_DEFINITION**
+    Every global variable, function, struct, and struct member should have
+    a comment.
 
 Commit message
 --------------

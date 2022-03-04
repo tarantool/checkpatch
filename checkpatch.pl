@@ -2104,6 +2104,7 @@ sub process {
 	my $realcnt = 0;
 	my $here = '';
 	my $context_function;		#undef'd unless there's a known function
+	my $context_struct;		#undef'd unless there's a known struct
 	my $in_comment = 0;
 	my $first_line = 0;
 
@@ -2224,6 +2225,11 @@ sub process {
 				$context_function = $1;
 			} else {
 				undef $context_function;
+			}
+			if ($context =~ /\bstruct\s+(?:\w+\s+)*(\w+)\s*{/) {
+				$context_struct = $1;
+			} else {
+				undef $context_struct;
 			}
 			next;
 
@@ -2954,6 +2960,16 @@ sub process {
 # check if this appears to be the end of function declaration
 		if ($sline =~ /^\+\}\s*$/) {
 			undef $context_function;
+		}
+
+# check if this appears to be the start of struct declaration, save the name
+		if ($line =~ /^\+struct\s+(?:$Modifier\s+)*($Ident)\s*{/) {
+			$context_struct = $1;
+		}
+
+# check if this appears to be the end of struct declaration
+		if ($sline =~ /^\+\}\s*;\s*$/) {
+			undef $context_struct;
 		}
 
 # check indentation of any line with a bare else
@@ -4425,6 +4441,37 @@ sub process {
 		if ($line =~ /^.\s*\#\s*(ifdef|ifndef|elif)\s\s+/) {
 			ERROR("SPACING",
 			      "exactly one space required after that #$1\n" . $herecurr);
+		}
+
+# check for uncommented definitions
+		my $check_comment = 0;
+		my $check_comment_line = $linenr;
+		my $check_comment_ident;
+		if ($realfile !~ /^test\// && # ignore tests
+		    $line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
+			# function, function pointer, variable / struct member
+			my $decl = $1;
+			$check_comment = defined($2) || !defined($context_function);
+			$check_comment_ident = defined($2) ? $2 : defined($3) ? $3 : $4;
+			if (!defined($decl) && $prevline =~ /^\+\s*($Declare)\s*$/) {
+				$decl = $1;
+				$check_comment_line -= 1;
+			}
+			if (!defined($decl)) {
+				$check_comment = 0;
+			} elsif ($realfile !~ /\.h$/ && $decl !~ /\bstatic\b/ && !defined($context_struct)) {
+				# don't require a comment for a global function or variable defined in a source file,
+				# because it should have a comment in a header file
+				$check_comment = 0;
+			}
+		} elsif ($line =~ /^\+\s*struct\s+(?:$Modifier\s+)*($Ident)\s*(?:{\s*)?$/) {
+			# struct
+			$check_comment_ident = $1;
+			$check_comment = !defined($context_function);
+		}
+		if ($check_comment && !ctx_has_comment($first_line, $check_comment_line)) {
+			ERROR("UNCOMMENTED_DEFINITION",
+			      "'$check_comment_ident' definition without comment\n" . $herecurr);
 		}
 
 # check that the storage class is not after a type
