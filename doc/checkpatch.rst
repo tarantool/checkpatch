@@ -193,6 +193,12 @@ Allocation style
 
       p = alloc(sizeof(*p), ...)
 
+  **XMALLOC**
+    Normally, malloc function never fails.  In case of memory shortage,
+    the OS will likely just kill the application instead of returning NULL.
+    So we use xmalloc wrapper instead, which panics in case malloc returns
+    NULL.
+
 
 API usage
 ---------

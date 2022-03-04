@@ -4662,6 +4662,13 @@ sub process {
 			      "$1 uses number as first arg, sizeof is generally wrong\n" . $herecurr);
 		}
 
+# prefer xmalloc over malloc
+		if ($line =~ /\b((?:m|c|re)alloc|strdup|strndup)\s*\(/) {
+			my $func = $1;
+			ERROR("XMALLOC",
+			      "Please use x$func instead of $func\n" . $herecurr);
+		}
+
 # check for multiple semicolons
 		if ($line =~ /;\s*;\s*$/) {
 			ERROR("ONE_SEMICOLON",
