@@ -3488,16 +3488,6 @@ sub process {
 			}
 		}
 
-# function brace can't be on same line, except for #defines of do while,
-# or if closed on same line
-		if ($perl_version_ok &&
-		    $sline =~ /$Type\s*$Ident\s*$balanced_parens\s*\{/ &&
-		    $sline !~ /\#\s*define\b.*do\s*\{/ &&
-		    $sline !~ /}/) {
-			ERROR("OPEN_BRACE",
-			      "open brace '{' following function definitions go on the next line\n" . $herecurr);
-		}
-
 # open braces for enum, union and struct go on the same line.
 		if ($line =~ /^.\s*{/ &&
 		    $prevline =~ /^.\s*(?:typedef\s+)?(enum|union|struct)(?:\s+$Ident)?\s*$/) {
@@ -4616,7 +4606,7 @@ sub process {
 # check for function definitions
 		if ($perl_version_ok &&
 		    defined $stat &&
-		    $stat =~ /^.\s*(?:$Storage\s+)?$Type\s*($Ident)\s*$balanced_parens\s*{/s) {
+		    $stat =~ /^.\s*$Declare\s*($Ident)\s*$balanced_parens\s*{/s) {
 			$context_function = $1;
 
 # check for multiline function definition with misplaced open brace
@@ -4627,7 +4617,8 @@ sub process {
 				my $rl = raw_line($linenr, $n);
 				$herectx .=  $rl . "\n";
 				$ok = 1 if ($rl =~ /^[ \+]\{/);
-				$ok = 1 if ($rl =~ /\{/ && $n == 0);
+				# allow opening and closing braces on the same line
+				$ok = 1 if ($rl =~ /\{.*\}/);
 				last if $rl =~ /^[ \+].*\{/;
 			}
 			if (!$ok) {
