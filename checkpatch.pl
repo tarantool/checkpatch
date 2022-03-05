@@ -2874,6 +2874,71 @@ sub process {
 			}
 		}
 
+# check for multiple spaces
+# allow spaces used for alignment before line-terminating '\'
+		if ($line =~ /^\+.*\S\s{2,}(.*)/ && $1 !~ '\\\s*$') {
+			my $s = $line;
+			$s =~ s/\s*$//;
+			$s =~ s/^(\+\s*)//;
+			my $off = $+[1];
+			my $pos = 0;
+			my $ok = 1;
+
+# allow spaces used for alignment in macro definitions
+
+			if ($s =~ '^#') {
+				$s =~ s/^(#\s*)//;
+				$off += $+[1];
+				if ($s =~ /^define(\s+)\w+\s*$balanced_parens?\s*(.+)$/) {
+					my $s1 = $1;
+					my $pos1 = $-[1];
+					my $s2 = $2;
+					my $pos2 = $-[2];
+					$s = $3;
+					$pos = $-[3];
+					if ($s1 =~ /(\s\s)/) {
+						$pos = $pos1 + $-[1];
+						$ok = 0;
+					} elsif (defined($s2) && $s2 =~ /(\s\s)/) {
+						$pos = $pos2 + $-[1];
+						$ok = 0;
+					}
+				}
+				if ($ok && $s =~ /(\s\s)/) {
+					$pos += $-[1];
+					$ok = 0;
+				}
+
+# allow spaces used for alignement before '=' in struct/enum initializers
+
+			} elsif ($s =~ /^(?:\[\s*$Ident\s*\]|\.?$Ident)\s*=(.*),$/) {
+				$s = $1;
+				$off += $-[1];
+				if ($s =~ /(\s\s)/) {
+					$pos = $-[1];
+					$ok = 0;
+				}
+
+# allow spaces used for alignment before '{' and ',' in array initializers
+
+			} elsif ($s =~ /^\{.*\}\s*,$/) {
+				if ($s =~ /[^,\{\s](\s\s)/) {
+					$pos = $-[1];
+					$ok = 0;
+				}
+			} elsif ($s =~ /\S(\s\s)/) {
+				$pos = $-[1];
+				$ok = 0;
+			}
+
+			if (!$ok) {
+				my $blank = copy_spacing($rawline);
+				my $ptr = substr($blank, 0, $off + $pos) . "^";
+				ERROR("SPACING",
+				      "Please don't use multiple spaces\n" . $herecurr . $ptr);
+			}
+		}
+
 # check for space after cast like "(int) foo" or "(struct foo) bar"
 # avoid checking a few false positives:
 #   "sizeof(<type>)" or "__alignof__(<type>)"
