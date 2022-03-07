@@ -2746,7 +2746,7 @@ sub process {
 		}
 
 # check we are in a valid C source file if not then ignore this hunk
-		next if ($realfile !~ /\.(h|c)$/);
+		next if ($realfile !~ /\.(h|c|cc)$/);
 
 # line length limit (with some exclusions)
 #
@@ -3097,8 +3097,8 @@ sub process {
 			# Ignore goto labels.
 			if ($s =~ /$Ident:\*$/s) {
 
-			# defintion in for() loop
-			} elsif ($s =~ /^.\s*for\s*\(\s*(?:const\s+)?($Ident)(?:\s*\bconst\b\s*|\s*\*\s*)*$Ident\b/) {
+			# defintion in for() loop and catch() block
+			} elsif ($s =~ /^.\s*(?:for|\}?\s*catch)\s*\(\s*(?:const\s+)?($Ident)(?:\s*\bconst\b\s*|\s*\*\s*)*$Ident\b/) {
 				possible($1, "A:" . $s);
 
 			# Ignore functions being called
@@ -3516,8 +3516,9 @@ sub process {
 		}
 
 # check for function declarations without arguments like "int foo()" or "int (*foo)()"
-		if ($line =~ /(\b$Type\s*(?:$Ident|\(\s*\*\s*$Ident\s*\)))\s*\(\s*\)/ ||
-		    ($prevline =~ /\b$Type\s*$/ && $line =~ /^\+\s*((?:$Ident|\(\s*\*\s*$Ident\s*\)))\s*\(\s*\)/)) {
+		if ($realfile =~ /\.c$/ &&
+		    ($line =~ /(\b$Type\s*(?:$Ident|\(\s*\*\s*$Ident\s*\)))\s*\(\s*\)/ ||
+		     ($prevline =~ /\b$Type\s*$/ && $line =~ /^\+\s*((?:$Ident|\(\s*\*\s*$Ident\s*\)))\s*\(\s*\)/))) {
 			ERROR("FUNCTION_WITHOUT_ARGS",
 			      "Bad function definition - $1() should probably be $1(void)\n" . $herecurr);
 		}
@@ -3615,7 +3616,7 @@ sub process {
 
 			# Ignore those directives where spaces _are_ permitted.
 			if ($name =~ /^(?:
-				if|for|while|switch|return|case|
+				if|for|while|switch|return|case|catch|
 				volatile|__volatile__|
 				__attribute__|format|__extension__|
 				asm|__asm__)$/x)
@@ -3645,7 +3646,7 @@ sub process {
 				\+=|-=|\*=|\/=|%=|\^=|\|=|&=|
 				=>|->|<<|>>|<|>|=|!|~|
 				&&|\|\||,|\^|\+\+|--|&|\||\+|-|\*|\/|%|
-				\?:|\?|:
+				\?:|\?|::|:
 			}x;
 			my @elements = split(/($ops|;)/, $opline);
 
@@ -3726,9 +3727,17 @@ sub process {
 				} elsif ($opv eq ':B') {
 					# skip the bitfield test for now
 
+				} elsif ($op eq ':' && $ca =~ /^\s*(?:class|struct)\b/) {
+					# skip class declaration
+
+				} elsif ($realfile =~ /\.(h|cc)$/ && $op =~ /[<>]/ &&
+					 $opline =~ /(?:^|<).*(?:,\s*$|>)/) {
+					# skip template
+
 				# No spaces for:
 				#   ->
-				} elsif ($op eq '->') {
+				#   ::
+				} elsif ($op eq '->' || $op eq '::') {
 					if ($ctx =~ /Wx.|.xW/) {
 						ERROR("SPACING",
 						      "spaces prohibited around that '$op' $at\n" . $hereptr);
@@ -3755,7 +3764,9 @@ sub process {
 				} elsif ($op eq '!' || $op eq '~' ||
 					 $opv eq '*U' || $opv eq '-U' ||
 					 $opv eq '&U' || $opv eq '&&U') {
-					if ($ctx !~ /[WEBC]x./ && $ca !~ /(?:\)|!|~|\*|-|\&|\||\+\+|\-\-|\{)$/) {
+					if ($op eq '~' && $ca =~ /::$/) {
+						# ~ before the name of a destructor
+					} elsif ($ctx !~ /[WEBC]x./ && $ca !~ /(?:\)|!|~|\*|-|\&|\||\+\+|\-\-|\{)$/) {
 						ERROR("SPACING",
 						      "space required before that '$op' $at\n" . $hereptr);
 					}
@@ -3904,10 +3915,10 @@ sub process {
 		}
 
 # check that goto labels aren't indented (allow a single space indentation)
-# and ignore bitfield definitions like foo:1
+# and ignore bitfield definitions like foo:1 and C++ scope resolution like foo::bar
 # Strictly, labels can have whitespace after the identifier and before the :
 # but this is not allowed here as many ?: uses would appear to be labels
-		if ($sline =~ /^.\s+[A-Za-z_][A-Za-z\d_]*:(?!\s*\d+)/ &&
+		if ($sline =~ /^.\s+[A-Za-z_][A-Za-z\d_]*:(?!\s*\d+|:)/ &&
 		    $sline !~ /^. [A-Za-z\d_][A-Za-z\d_]*:/ &&
 		    $sline !~ /^.\s+default:/) {
 			ERROR("INDENTED_LABEL",
@@ -4751,7 +4762,7 @@ sub process {
 		}
 
 # check for pointless casting of alloc functions
-		if ($line =~ /\*\s*\)\s*$allocFunctions\b/) {
+		if ($realfile =~ /\.c$/ &&  $line =~ /\*\s*\)\s*$allocFunctions\b/) {
 			ERROR("UNNECESSARY_CASTS",
 			      "unnecessary cast may hide bugs, see http://c-faq.com/malloc/mallocnocast.html\n" . $herecurr);
 		}
