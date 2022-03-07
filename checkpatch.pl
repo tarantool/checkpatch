@@ -3097,6 +3097,10 @@ sub process {
 			# Ignore goto labels.
 			if ($s =~ /$Ident:\*$/s) {
 
+			# defintion in for() loop
+			} elsif ($s =~ /^.\s*for\s*\(\s*(?:const\s+)?($Ident)(?:\s*\bconst\b\s*|\s*\*\s*)*$Ident\b/) {
+				possible($1, "A:" . $s);
+
 			# Ignore functions being called
 			} elsif ($s =~ /^.\s*$Ident\s*\(/s) {
 
@@ -3106,16 +3110,16 @@ sub process {
 			} elsif ($prev_values eq 'E' && $s =~ /^.\s*(?:$Storage\s+)?(?:$Inline\s+)?(?:const\s+)?((?:\s*$Ident)+?)\b\s*\**\s*(?:$Ident|\(\*[^\)]*\))(?:\s*$Modifier)?\s*(?:;|=|,|\()/s) {
 				my $type = $1;
 				$type =~ s/\s+/ /g;
-				possible($type, "A:" . $s);
+				possible($type, "B:" . $s);
 
 			# definitions in global scope can only start with types
 			} elsif ($s =~ /^.(?:$Storage\s+)?(?:$Inline\s+)?(?:const\s+)?($Ident)\b\s*(?!:)/s) {
-				possible($1, "B:" . $s);
+				possible($1, "C:" . $s);
 			}
 
 			# any (foo ... *) is a pointer cast, and foo is a type
 			while ($s =~ /\(($Ident)[\s\*]+\s*\)/sg) {
-				possible($1, "C:" . $s);
+				possible($1, "D:" . $s);
 			}
 
 			# Check for any sort of function declaration.
@@ -3131,7 +3135,7 @@ sub process {
 				for my $arg (split(/\s*,\s*/, $ctx)) {
 					if ($arg =~ /^(?:const\s+)?($Ident)\s*\**\s*(:?\b$Ident)?$/s || $arg =~ /^($Ident)$/s) {
 
-						possible($1, "D:" . $s);
+						possible($1, "E:" . $s);
 					}
 				}
 			}
