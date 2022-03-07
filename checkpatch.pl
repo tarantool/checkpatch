@@ -572,8 +572,9 @@ our @typeList = (
 	qr{union\s+$Ident},
 	qr{enum\s+$Ident},
 	qr{${Ident}_t},
-	qr{${Ident}_handler},
-	qr{${Ident}_handler_fn},
+	qr{${Ident}_f},
+	qr{${Ident}_fn},
+	qr{${Ident}_cb},
 	@typeListMisordered,
 );
 
