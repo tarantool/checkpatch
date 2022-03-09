@@ -744,6 +744,27 @@ Others
     The memset use appears to be incorrect.  This may be caused due to
     badly ordered parameters.  Please recheck the usage.
 
+  **NO_CHANGELOG**
+    The patch lacks a changelog.  Please add a new changelog entry to the
+    changelog/unreleased directory.  If the patch doesn't need a changelog
+    (e.g. it fixes a flaky test), please add NO_CHANGELOG=<reason> to the
+    commit log.
+
+  **NO_DOC**
+    The patch lacks a documentation request.  Please add::
+
+      @TarantoolBot document
+      Title: <title>
+      <description>
+
+    to the commit log.  If the patch doesn't need a documentation request
+    (e.g. it's a bug fix), please add NO_DOC=<reason> to the commit log.
+
+  **NO_TEST**
+    The patch lacks a test.  Please add a new test to the test/ directory.
+    If the patch doesn't need a test (e.g. it fixes a CI issue), please add
+    NO_TEST=<reason> to the commit log.
+
   **NOT_UNIFIED_DIFF**
     The patch file does not appear to be in unified-diff format.  Please
     regenerate the patch file before sending it to the maintainer.

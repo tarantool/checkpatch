@@ -477,6 +477,12 @@ our $signature_tags = qr{(?xi:
 	Cc:
 )};
 
+our $custom_tags = qr{(?x:
+	NO_DOC|
+	NO_TEST|
+	NO_CHANGELOG
+)};
+
 sub edit_distance_min {
 	my (@arr) = @_;
 	my $len = scalar @arr;
@@ -2116,6 +2122,11 @@ sub process {
 
 	my %signatures = ();
 
+	my %commit_log_tags = ();
+	my $has_changelog = 0;
+	my $has_doc = 0;
+	my $has_test = 0;
+
 	# Pre-scan the patch sanitizing the lines.
 
 	sanitise_line_reset();
@@ -2671,6 +2682,19 @@ sub process {
 				ERROR("UNKNOWN_COMMIT_ID",
 				      "Unknown commit id '$2', maybe rebased or not pulled?\n" . $herecurr);
 			}
+		}
+
+		if ($in_commit_log && $line =~ /^($custom_tags)=/) {
+			$commit_log_tags{$1} = 1;
+		}
+		if ($in_commit_log && $line =~ /^\@TarantoolBot document$/) {
+			$has_doc = 1;
+		}
+		if ($realfile =~ /^changelogs\/unreleased/) {
+			$has_changelog = 1;
+		}
+		if ($realfile =~ /^test\/.*\//) {
+			$has_test = 1;
 		}
 
 # check for repeated words separated by a single space
@@ -4971,6 +4995,33 @@ sub process {
 				ERROR("FROM_SIGN_OFF_MISMATCH",
 				      "From:/Signed-off-by: email subaddress mismatch: $sob_msg\n");
 			}
+		}
+	}
+
+	if ($is_patch && $has_commit_log) {
+		if (!$has_doc && !exists($commit_log_tags{'NO_DOC'})) {
+			ERROR("NO_DOC",
+			      "Please add doc or NO_DOC=<reason> tag");
+		}
+		if ($has_doc && exists($commit_log_tags{'NO_DOC'})) {
+			ERROR("REDUNDANT_TAG",
+			      "Redundant NO_DOC tag");
+		}
+		if (!$has_changelog && !exists($commit_log_tags{'NO_CHANGELOG'})) {
+			ERROR("NO_CHANGELOG",
+			      "Please add changelog or NO_CHANGELOG=<reason> tag");
+		}
+		if ($has_changelog && exists($commit_log_tags{'NO_CHANGELOG'})) {
+			ERROR("REDUNDANT_TAG",
+			      "Redundant NO_CHANGELOG tag");
+		}
+		if (!$has_test && !exists($commit_log_tags{'NO_TEST'})) {
+			ERROR("NO_TEST",
+			      "Please add test or NO_TEST=<reason> tag");
+		}
+		if ($has_test && exists($commit_log_tags{'NO_TEST'})) {
+			ERROR("REDUNDANT_TAG",
+			      "Redundant NO_TEST tag");
 		}
 	}
 
