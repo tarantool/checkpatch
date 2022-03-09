@@ -30,18 +30,15 @@ Available options:
    Enable verbose mode.  Additional verbose test descriptions are output
    so as to provide information on why that particular message is shown.
 
- - --no-signoff
+ - --signoff
 
-   Disable the 'Signed-off-by' line check.  The sign-off is a simple line at
+   Enable the 'Signed-off-by' line check.  The sign-off is a simple line at
    the end of the explanation for the patch, which certifies that you wrote it
    or otherwise have the right to pass it on as an open-source patch.
 
    Example::
 
 	 Signed-off-by: Random J Developer <random@developer.example.org>
-
-   Setting this flag effectively stops a message for a missing signed-off-by
-   line in a patch context.
 
  - --patch
 

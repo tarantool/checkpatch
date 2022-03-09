@@ -26,7 +26,7 @@ my $quiet = 0;
 my $verbose = 0;
 my %verbose_messages = ();
 my %verbose_emitted = ();
-my $chk_signoff = 1;
+my $chk_signoff = 0;
 my $chk_patch = 1;
 my $tst_only;
 my $emacs = 0;
@@ -73,7 +73,7 @@ Version: $V
 Options:
   -q, --quiet                quiet
   -v, --verbose              verbose mode
-  --no-signoff               do not check for 'Signed-off-by' line
+  --signoff                  check for 'Signed-off-by' line
   --patch                    treat FILE as patchfile (default)
   --emacs                    emacs compile window format
   --terse                    one line per report
