@@ -12,6 +12,15 @@ The documentation is [here](doc/checkpatch.rst).
 If you find any bugs, please don't hesitate to report them to the
 [issue tracker](checkpatch-issues).
 
+## Quick start
+
+To check all Git commits on the current branch, run the following command in
+your local Tarantool Git directory:
+```
+git clone git@github.com:tarantool/checkpatch.git
+checkpatch/checkpatch.pl -g master..HEAD
+```
+
 [checkpatch-issues]: https://github.com/tarantool/checkpatch/issues
 [linux-checkpatch]: https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl
 [tarantool]: https://github.com/tarantool/tarantool
