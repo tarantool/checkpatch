@@ -2805,6 +2805,11 @@ sub process {
 				 $line =~ /^\+\s*#\s*define\s+\w+\s+$String$/) {
 				$msg_type = "";
 
+			# error codes:
+			# _(code, "message") \
+			} elsif ($line =~ /$String\s*\)\s*\\\s*$/) {
+				$msg_type = "";
+
 			# URL ($rawline is used in case the URL is in a comment)
 			} elsif ($rawline =~ /^\+.*\b[a-z][\w\.\+\-]*:\/\/\S+/i) {
 				$msg_type = "";
