@@ -1,0 +1,15 @@
+name: Checkpatch
+description: Check patches against Tarantool development guidelines
+inputs:
+  revision-range:
+    description: Git revision range to check
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: tarantool/checkpatch
+        path: 'checkpatch'
+    - run: checkpatch/checkpatch.pl --color=always --git ${{ inputs.revision-range }}
+      shell: bash
