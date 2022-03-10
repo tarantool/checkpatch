@@ -3540,8 +3540,7 @@ sub process {
 		}
 
 # check for function declarations without arguments like "int foo()" or "int (*foo)()"
-		if ($realfile =~ /\.c$/ &&
-		    ($line =~ /(\b$Type\s*(?:$Ident|\(\s*\*\s*$Ident\s*\)))\s*\(\s*\)/ ||
+		if (($line =~ /(\b$Type\s*(?:$Ident|\(\s*\*\s*$Ident\s*\)))\s*\(\s*\)/ ||
 		     ($prevline =~ /\b$Type\s*$/ && $line =~ /^\+\s*((?:$Ident|\(\s*\*\s*$Ident\s*\)))\s*\(\s*\)/))) {
 			ERROR("FUNCTION_WITHOUT_ARGS",
 			      "Bad function definition - $1() should probably be $1(void)\n" . $herecurr);
