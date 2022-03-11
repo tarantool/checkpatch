@@ -2113,6 +2113,7 @@ sub process {
 	my $context_struct;		#undef'd unless there's a known struct
 	my $in_comment = 0;
 	my $first_line = 0;
+	my %check_comment_ignore = ();
 
 	my $prev_values = 'E';
 
@@ -2278,6 +2279,7 @@ sub process {
 			if ($realfile ne $newrealfile) {
 				$realfile = $newrealfile;
 				$has_exec_perm = 0;
+				%check_comment_ignore = ();
 			}
 			$in_commit_log = 0;
 			next
@@ -4555,22 +4557,34 @@ sub process {
 		my $check_comment = 0;
 		my $check_comment_line = $linenr;
 		my $check_comment_ident;
-		if ($realfile !~ /^test\// && # ignore tests
-		    $line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
+		if ($realfile =~ /^test\//) {
+			# ignore tests
+		} elsif ($line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
 			# function, function pointer, variable / struct member
 			my $decl = $1;
-			$check_comment = defined($2) || !defined($context_function);
+			my $is_func = defined($2);
 			$check_comment_ident = defined($2) ? $2 : defined($3) ? $3 : $4;
 			if (!defined($decl) && $prevline =~ /^\+\s*($Declare)\s*$/) {
 				$decl = $1;
 				$check_comment_line -= 1;
 			}
 			if (!defined($decl)) {
-				$check_comment = 0;
+				# not a declaration
+			} elsif (!$is_func && defined($context_function)) {
+				# ignore local variables
 			} elsif ($realfile !~ /\.h$/ && $decl !~ /\bstatic\b/ && !defined($context_struct)) {
 				# don't require a comment for a global function or variable defined in a source file,
 				# because it should have a comment in a header file
-				$check_comment = 0;
+			} elsif ($is_func && $check_comment_ident =~ /_(?:init|free|new|delete|create|destroy|f|fn|cb)$/) {
+				# don't require a comment for constructor/destructor and callback functions
+			} elsif ($is_func && defined($stat) && statement_rawlines($stat) < 7) {
+				# ignore short functions
+			} elsif (!$check_comment_ignore{$check_comment_ident}) {
+				$check_comment = 1;
+				# Don't require a comment for a function definition if a forward declaration has one.
+				if ($is_func) {
+					$check_comment_ignore{$check_comment_ident} = 1;
+				}
 			}
 		} elsif ($line =~ /^\+\s*struct\s+(?:$Modifier\s+)*($Ident)\s*(?:{\s*)?$/) {
 			# struct
