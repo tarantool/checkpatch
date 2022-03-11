@@ -2948,12 +2948,12 @@ sub process {
 					$ok = 0;
 				}
 
-# allow spaces used for alignment before '{' and ',' in array initializers
+# allow spaces used for alignment after '{', ',' and before '}' in array initializers
 
 			} elsif ($s =~ /^\{.*\}\s*,$/) {
-				if ($s =~ /[^,\{\s](\s\s)/) {
+				if ($s =~ /[^,\{\s](\s{2,})(.)/) {
 					$pos = $-[1];
-					$ok = 0;
+					$ok = 0 if $2 ne '}';
 				}
 			} elsif ($s =~ /\S(\s\s)/) {
 				$pos = $-[1];
