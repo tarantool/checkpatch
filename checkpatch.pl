@@ -3205,7 +3205,9 @@ sub process {
 
 # if/while/etc brace do not go on next line, unless defining a do while loop,
 # or if that brace on the next line is for something else
-		if ($line =~ /(.*)\b((?:if|while|for|switch|[a-z_]*foreach[a-z_]*)\s*\(|do\b|else\b)/ && $line !~ /^.\s*\#/) {
+		if ($line =~ /^.\s*$Declare\b/ || $prevline =~ /^.\s*$Declare\s*$/) {
+			# ignore function definitions with foreach in the name
+		} elsif ($line =~ /(.*)\b((?:if|while|for|switch|[a-z_]*foreach[a-z_]*)\s*\(|do\b|else\b)/ && $line !~ /^.\s*\#/) {
 			my $pre_ctx = "$1$2";
 
 			my ($level, @ctx) = ctx_statement_level($linenr, $realcnt, 0);
