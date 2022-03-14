@@ -2527,6 +2527,8 @@ sub process {
 					# file delta changes
 		      $line =~ /^\s*(?:[\w\.\-\+]*\/)++[\w\.\-\+]+:/ ||
 					# filename then :
+		      $line =~ /\b[a-z][\w\.\+\-]*:\/\/\S+$/i ||
+					# URL
 		      $line =~ /^\s*(?:Fixes:|Link:|$signature_tags)/i)) {
 					# A Fixes: or Link: line or signature tag line
 			ERROR("COMMIT_LOG_LONG_LINE",
