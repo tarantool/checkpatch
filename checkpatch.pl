@@ -3396,22 +3396,6 @@ sub process {
 			      "Avoid multiple line dereference - prefer '$ref'\n" . $hereprev);
 		}
 
-# check for declarations of signed or unsigned without int
-		while ($line =~ m{\b($Declare)\s*(?!char\b|short\b|int\b|long\b)\s*($Ident)?\s*[=,;\[\)\(]}g) {
-			my $type = $1;
-			my $var = $2;
-			$var = "" if (!defined $var);
-			if ($type =~ /^(?:(?:$Storage|$Inline|$Attribute)\s+)*((?:un)?signed)((?:\s*\*)*)\s*$/) {
-				my $sign = $1;
-				my $pointer = $2;
-
-				$pointer = "" if (!defined $pointer);
-
-				ERROR("UNSPECIFIED_INT",
-				      "Prefer '" . trim($sign) . " int" . rtrim($pointer) . "' to bare use of '$sign" . rtrim($pointer) . "'\n" . $herecurr);
-			}
-		}
-
 # TEST: allow direct testing of the type matcher.
 		if ($dbg_type) {
 			if ($line =~ /^.\s*$Declare\s*$/) {
