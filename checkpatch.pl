@@ -3563,7 +3563,7 @@ sub process {
 		}
 
 # check that function name and return value type are placed on different lines
-		if ($line =~ /^\+\s*(?:typedef\s+)?$Declare\s*(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*\(/) {
+		if ($line =~ /^\+(?:typedef\s+)?$Declare\s*(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*\(/) {
 			ERROR("FUNCTION_NAME_NO_NEWLINE",
 			      "Function name and return value type should be placed on different lines\n" . $herecurr)
 		}
