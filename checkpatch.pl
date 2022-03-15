@@ -2781,8 +2781,8 @@ sub process {
 # check we are in a valid C source file if not then ignore this hunk
 		next if ($realfile !~ /\.(h|c|cc)$/);
 
-# ignore C source files outside the src directory when checking patches
-		next if !$file and $realfile !~ /^src\//;
+# ignore C source files outside the source and test directories when checking patches
+		next if !$file and $realfile !~ /^(?:src|test)\//;
 
 # line length limit (with some exclusions)
 #
