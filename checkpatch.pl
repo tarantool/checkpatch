@@ -443,9 +443,10 @@ our $UTF8	= qr{
 	| $NON_ASCII_UTF8
 }x;
 
-our $typeC99Typedefs = qr{(?:__)?(?:[us]_?)?int_?(?:8|16|32|64)_t};
 our $typeTypedefs = qr{(?x:
-	$typeC99Typedefs\b
+	(?:__)?(?:[us]_?)?int_?(?:8|16|32|64)_t|
+	ev_loop|
+	lua_State
 )};
 
 our $zero_initializer = qr{(?:(?:0[xX])?0+$Int_type?|NULL|false)\b};
