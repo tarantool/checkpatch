@@ -1577,6 +1577,8 @@ sub ctx_locate_comment {
 	$current_comment = '';
 	for (my $linenr = $first_line; $linenr < $end_line; $linenr++) {
 		my $line = $rawlines[$linenr - 1];
+		# ignore deleted lines
+		next if ($line =~ /^-/);
 		#warn "           $line\n";
 		if ($linenr == $first_line and $line =~ m@^.\s*\*@) {
 			$in_comment = 1;
