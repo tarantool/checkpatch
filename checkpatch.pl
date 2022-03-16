@@ -445,6 +445,7 @@ our $UTF8	= qr{
 
 our $typeTypedefs = qr{(?x:
 	(?:__)?(?:[us]_?)?int_?(?:8|16|32|64)_t|
+	u_(?:char|short|int|long)|
 	ev_loop|
 	lua_State
 )};
