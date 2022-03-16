@@ -3151,6 +3151,9 @@ sub process {
 
 			} elsif ($s =~ /^.\s*else\b/s) {
 
+			# Ignore 'foo * bar;' at the end of a multi-line macro, because it may be a return value
+			} elsif ($s =~ /^.\s*$Ident\s*\*\s*$Ident\s*;\s*$/ && $lines[$realline_next] =~ /\}\)/) {
+
 			# declarations always start with types
 			} elsif ($prev_values eq 'E' && $s =~ /^.\s*(?:$Storage\s+)?(?:$Inline\s+)?(?:const\s+)?((?:\s*$Ident)+?)\b\s*\**\s*(?:$Ident|\(\*[^\)]*\))(?:\s*$Modifier)?\s*(?:;|=|,|\()/s) {
 				my $type = $1;
