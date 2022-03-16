@@ -443,6 +443,10 @@ our $UTF8	= qr{
 	| $NON_ASCII_UTF8
 }x;
 
+our $skipPaths = qr{(?x:
+	src\/lib\/tzcode\/
+)};
+
 our $typeTypedefs = qr{(?x:
 	(?:__)?(?:[us]_?)?int_?(?:8|16|32|64)_t|
 	u_(?:char|short|int|long)|
@@ -2783,7 +2787,7 @@ sub process {
 		next if ($realfile !~ /\.(h|c|cc)$/);
 
 # ignore C source files outside the source and test directories when checking patches
-		next if !$file and $realfile !~ /^(?:src|test)\//;
+		next if !$file and ($realfile !~ /^(?:src|test)\// || $realfile =~ /^$skipPaths/);
 
 # line length limit (with some exclusions)
 #
