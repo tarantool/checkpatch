@@ -4571,9 +4571,11 @@ sub process {
 			} elsif ($realfile !~ /\.h$/ && $decl !~ /\bstatic\b/ && !defined($context_struct)) {
 				# don't require a comment for a global function or variable defined in a source file,
 				# because it should have a comment in a header file
-			} elsif ($is_func && $check_comment_ident =~ /_(?:init|free|new|delete|create|destroy|f|fn|cb)$/) {
-				# don't require a comment for constructor/destructor and callback functions
-			} elsif ($is_func && defined($stat) && statement_rawlines($stat) < 7) {
+			} elsif ($is_func && $check_comment_ident =~ /_(?:init|free|new|delete|create|destroy)$/) {
+				# don't require a comment for constructor/destructor
+			} elsif ($is_func && $decl =~ /\bstatic\b/ && $check_comment_ident =~ /_(?:f|fn|cb)$/) {
+				# don't require a comment for a static callback function
+			} elsif ($is_func && defined($stat) && $stat =~ /\{/ && statement_rawlines($stat) < 7) {
 				# ignore short functions
 			} elsif (!$check_comment_ignore{$check_comment_ident}) {
 				$check_comment = 1;
