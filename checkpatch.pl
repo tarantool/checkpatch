@@ -2923,8 +2923,12 @@ sub process {
 # allow spaces used for alignment before line-terminating '\'
 		if ($line =~ /^\+.*\S\s{2,}(.*)/ && $1 !~ '\\\s*$') {
 			my $s = $line;
+			# remove trailing spaces
 			$s =~ s/\s*$//;
+			# remove spaces used for indentation
 			$s =~ s/^(\+\s*)//;
+			# remove spaces before the line-terminating comment along with the comment
+			$s =~ s/\s*$;+$//;
 			my $off = $+[1];
 			my $pos = 0;
 			my $ok = 1;
