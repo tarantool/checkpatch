@@ -2788,9 +2788,10 @@ sub process {
 # line length limit (with some exclusions)
 #
 # There are a few types of lines that may extend beyond $max_line_length:
-#	logging functions like pr_info that end in a string
+#	logging functions like say_info that end in a string
 #	lines with a single string
 #	#defines that are a single string
+#	array initilizers
 #	lines with an RFC3986 like URL
 #
 # There are 3 different line length message types:
@@ -2818,9 +2819,11 @@ sub process {
 				 $line =~ /^\+\s*#\s*define\s+\w+\s+$String$/) {
 				$msg_type = "";
 
-			# error codes:
-			# _(code, "message") \
-			} elsif ($line =~ /$String\s*\)\s*\\\s*$/) {
+			# Array initializers
+			# { bar, baz },
+			# FOO(bar, baz),
+			# FOO(bar, baz) \
+			} elsif ($line =~ /^\+[$;\s]*(?:\{.*\}|[a-z_]+\s*\(.*\))\s*,?[$;\s]*\\?\s*$/i) {
 				$msg_type = "";
 
 			# URL ($rawline is used in case the URL is in a comment)
