@@ -3788,7 +3788,7 @@ sub process {
 				# none after.  May be left adjacent to another
 				# unary operator, or a cast
 				} elsif ($op eq '!' || $op eq '~' ||
-					 $opv eq '*U' || $opv eq '-U' ||
+					 $opv eq '*U' || $opv eq '-U' || $opv eq '+U' ||
 					 $opv eq '&U' || $opv eq '&&U') {
 					if ($op eq '~' && $ca =~ /::$/) {
 						# ~ before the name of a destructor
