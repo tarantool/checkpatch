@@ -2676,7 +2676,7 @@ sub process {
 				$typo_fix = ucfirst($typo_fix) if ($typo =~ /^[A-Z]/);
 				$typo_fix = uc($typo_fix) if ($typo =~ /^[A-Z]+$/);
 				# Ignore the case when we drop a character to use a misspelled word as function name, e.g. isnt().
-				next if ($realfile =~ /\.h|c|cc$/ && $typo_fix =~ /[^a-zA-Z_]/ && $line =~ /\b$typo\s*\(/);
+				next if ($realfile =~ /\.h|c|cc|lua$/ && $typo_fix =~ /[^a-zA-Z_]/ && $line =~ /\b$typo\s*\(/);
 				ERROR("TYPO_SPELLING",
 				      "'$typo' may be misspelled - perhaps '$typo_fix'?\n" . $hereptr);
 			}
