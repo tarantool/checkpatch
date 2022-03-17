@@ -2783,6 +2783,13 @@ sub process {
 			      "It's generally not useful to have the filename in the file\n" . $herecurr);
 		}
 
+# Check for tabs in files where we use only spaces
+		if ($realfile !~ /\.(h|c|cc)$/ && $rawline =~ /^\+.*\t/) {
+			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
+			ERROR("TABSTOP",
+			      "please, use spaces instead of tabs\n" . $herevet);
+		}
+
 # check we are in a valid C source file if not then ignore this hunk
 		next if ($realfile !~ /\.(h|c|cc)$/);
 
