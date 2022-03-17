@@ -2784,7 +2784,7 @@ sub process {
 		}
 
 # Check for tabs in files where we use only spaces
-		if ($realfile !~ /\.(h|c|cc)$/ && $rawline =~ /^\+.*\t/) {
+		if ($realfile !~ /\.(h|c|cc|result)$/ && $rawline =~ /^\+.*\t/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
 			ERROR("TABSTOP",
 			      "please, use spaces instead of tabs\n" . $herevet);
