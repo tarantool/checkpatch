@@ -2777,6 +2777,11 @@ sub process {
 			      "trailing whitespace\n" . $herevet);
 		}
 
+		if ($line =~ /^\+\s*$/ && (!defined($lines[$linenr]) || $lines[$linenr] =~ /^(?:diff --git|-- $)/)) {
+			ERROR("TRAILING_NEWLINE",
+			      "trailing newline\n" . $hereprev);
+		}
+
 # check for adding lines without a newline.
 		if ($line =~ /^\+/ && defined $lines[$linenr] && $lines[$linenr] =~ /^\\ No newline at end of file/) {
 			ERROR("MISSING_EOF_NEWLINE",
