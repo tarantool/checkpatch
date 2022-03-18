@@ -2789,6 +2789,13 @@ sub process {
 			      "It's generally not useful to have the filename in the file\n" . $herecurr);
 		}
 
+# check for space before tabs.
+		if ($rawline =~ /^\+/ && $rawline =~ / \t/) {
+			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
+			ERROR("SPACE_BEFORE_TAB",
+			      "please, no space before tabs\n" . $herevet);
+		}
+
 # Check for tabs in files where we use only spaces
 		if ($realfile !~ /(?:\.gitmodules|\.(h|c|cc|result))$/ && $rawline =~ /^\+.*\t/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
@@ -2873,13 +2880,6 @@ sub process {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
 			ERROR("CODE_INDENT",
 			      "code indent should use tabs where possible\n" . $herevet);
-		}
-
-# check for space before tabs.
-		if ($rawline =~ /^\+/ && $rawline =~ / \t/) {
-			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
-			ERROR("SPACE_BEFORE_TAB",
-			      "please, no space before tabs\n" . $herevet);
 		}
 
 # check for assignments on the start of a line
