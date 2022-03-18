@@ -4443,6 +4443,10 @@ sub process {
 			ERROR("BRACES",
 			      "Blank lines aren't necessary before a close brace '}'\n" . $hereprev);
 		}
+		if (($line =~ /^.\s*{\s*$/ && $prevrawline =~ /^.\s*$/)) {
+			ERROR("BRACES",
+			      "Blank lines aren't necessary before an open brace '{'\n" . $hereprev);
+		}
 		if (($rawline =~ /^.\s*$/ && $prevline =~ /^..*{\s*$/)) {
 			ERROR("BRACES",
 			      "Blank lines aren't necessary after an open brace '{'\n" . $hereprev);
