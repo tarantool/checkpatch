@@ -2797,7 +2797,7 @@ sub process {
 		}
 
 # Check for tabs in files where we use only spaces
-		if ($realfile !~ /(?:\.gitmodules|\.(h|c|cc|result))$/ && $rawline =~ /^\+.*\t/) {
+		if ($realfile !~ /(?:Makefile|rules|\.(h|c|cc|cpp|h\.cmake|h\.proto|rl|y|mk|make|patch|result|gitmodules))$/ && $rawline =~ /^\+.*\t/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
 			ERROR("TABSTOP",
 			      "please, use spaces instead of tabs\n" . $herevet);
