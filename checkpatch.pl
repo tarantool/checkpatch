@@ -2777,6 +2777,12 @@ sub process {
 			      "trailing whitespace\n" . $herevet);
 		}
 
+# check for adding lines without a newline.
+		if ($line =~ /^\+/ && defined $lines[$linenr] && $lines[$linenr] =~ /^\\ No newline at end of file/) {
+			ERROR("MISSING_EOF_NEWLINE",
+			      "adding a line without newline at end of file\n" . $herecurr);
+		}
+
 # check for embedded filenames
 		if ($rawline =~ /^\+.*\Q$realfile\E/) {
 			ERROR("EMBEDDED_FILENAME",
@@ -2858,12 +2864,6 @@ sub process {
 				ERROR($msg_type,
 				      "line length of $length exceeds $max_line_length columns\n" . $herecurr);
 			}
-		}
-
-# check for adding lines without a newline.
-		if ($line =~ /^\+/ && defined $lines[$linenr] && $lines[$linenr] =~ /^\\ No newline at end of file/) {
-			ERROR("MISSING_EOF_NEWLINE",
-			      "adding a line without newline at end of file\n" . $herecurr);
 		}
 
 # at the beginning of a line any tabs must come first and anything
