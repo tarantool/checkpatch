@@ -2615,7 +2615,7 @@ sub process {
 			($id, $description) = git_commit_info($orig_commit,
 							      $id, $orig_desc);
 
-			if (defined($id) &&
+			if (defined($id) && $line !~ /^\(cherry picked from commit [0-9a-f]+\)$/ &&
 			    ($short || $long || $space || $case || ($orig_desc ne $description) || !$has_quotes) &&
 			    $last_git_commit_id_linenr != $linenr - 1) {
 				ERROR("GIT_COMMIT_ID",
