@@ -2822,6 +2822,7 @@ sub process {
 #	#defines that are a single string
 #	array initilizers
 #	lines with an RFC3986 like URL
+#	multiline macros, that can use 81th backslash symbol
 #
 # There are 3 different line length message types:
 # LONG_LINE_COMMENT	a comment starts before but extends beyond $max_line_length
@@ -2857,6 +2858,9 @@ sub process {
 
 			# URL ($rawline is used in case the URL is in a comment)
 			} elsif ($rawline =~ /^\+.*\b[a-z][\w\.\+\-]*:\/\/\S+/i) {
+				$msg_type = "";
+			# Multiline macros often use '\' as the last, 81st symbol
+			} elsif ($line =~ /^\+.*\\$/ && $length == $max_line_length + 1) {
 				$msg_type = "";
 
 			# Otherwise set the alternate message types
