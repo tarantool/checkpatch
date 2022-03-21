@@ -5062,17 +5062,9 @@ sub process {
 			ERROR("NO_CHANGELOG",
 			      "Please add changelog or NO_CHANGELOG=<reason> tag");
 		}
-		if ($has_changelog && exists($commit_log_tags{'NO_CHANGELOG'})) {
-			ERROR("REDUNDANT_TAG",
-			      "Redundant NO_CHANGELOG tag");
-		}
 		if (!$has_test && !exists($commit_log_tags{'NO_TEST'})) {
 			ERROR("NO_TEST",
 			      "Please add test or NO_TEST=<reason> tag");
-		}
-		if ($has_test && exists($commit_log_tags{'NO_TEST'})) {
-			ERROR("REDUNDANT_TAG",
-			      "Redundant NO_TEST tag");
 		}
 	}
 
