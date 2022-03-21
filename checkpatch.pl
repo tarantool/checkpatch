@@ -4600,6 +4600,20 @@ sub process {
 				$decl = $1;
 				$check_comment_line -= 1;
 			}
+			my $func_body_size;
+			if ($is_func && defined($stat)) {
+				my $cnt = statement_rawlines($stat);
+				for (my $n = 0; $n < $cnt; $n++) {
+					my $rl = raw_line($linenr, $n);
+					if (!defined($func_body_size)) {
+						$func_body_size = -1 if $rl =~ /\{/;
+						next;
+					}
+					if ($rl !~ /^.\s*(?:\(\s*void\s*\)\s*$Ident|unreachable\s*\(\s*\))\s*;\s*$/) {
+						$func_body_size += 1;
+					}
+				}
+			}
 			if (!defined($decl)) {
 				# not a declaration
 			} elsif (!$is_func && defined($context_function)) {
@@ -4611,7 +4625,7 @@ sub process {
 				# don't require a comment for constructor/destructor
 			} elsif ($is_func && $decl =~ /\bstatic\b/ && $check_comment_ident =~ /_(?:f|fn|cb)$/) {
 				# don't require a comment for a static callback function
-			} elsif ($is_func && defined($stat) && $stat =~ /\{/ && statement_rawlines($stat) < 7) {
+			} elsif (defined($func_body_size) && $func_body_size <= 3) {
 				# ignore short functions
 			} elsif (!$check_comment_ignore{$check_comment_ident}) {
 				$check_comment = 1;
