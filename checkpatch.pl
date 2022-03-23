@@ -4600,6 +4600,10 @@ sub process {
 				$decl = $1;
 				$check_comment_line -= 1;
 			}
+			# Skip C++ template
+			while ($check_comment_line >= 2 && $lines[$check_comment_line - 2] =~ /[,>]\s*$/) {
+				$check_comment_line -= 1;
+			}
 			my $func_body_size;
 			if ($is_func && defined($stat)) {
 				my $cnt = statement_rawlines($stat);
