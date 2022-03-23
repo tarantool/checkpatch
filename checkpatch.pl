@@ -4306,11 +4306,6 @@ sub process {
 				$tmp_stmt =~ s/\b(__must_be_array|offsetof|sizeof|sizeof_field|__stringify|typeof|__typeof__|__builtin\w+|typecheck\s*\(\s*$Type\s*,|\#+)\s*\(*\s*$arg\s*\)*\b//g;
 				$tmp_stmt =~ s/\#+\s*$arg\b//g;
 				$tmp_stmt =~ s/\b$arg\s*\#\#//g;
-				my $use_cnt = () = $tmp_stmt =~ /\b$arg\b/g;
-				if ($use_cnt > 1) {
-					ERROR("MACRO_ARG_REUSE",
-					      "Macro argument reuse '$arg' - possible side-effects?\n" . "$herectx");
-				    }
 # check if any macro arguments may have other precedence issues
 				if ($tmp_stmt =~ m/($Operators)?\s*\b$arg\b\s*($Operators)?/m &&
 				    ((defined($1) && $1 ne ',') ||
