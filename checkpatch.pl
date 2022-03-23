@@ -2852,9 +2852,10 @@ sub process {
 
 			# Array initializers
 			# { bar, baz },
+			# foo, bar, baz,
 			# FOO(bar, baz),
 			# FOO(bar, baz) \
-			} elsif ($line =~ /^\+[$;\s]*(?:\{.*\}|[a-z_]+\s*\(.*\))\s*,?[$;\s]*\\?\s*$/i) {
+			} elsif ($line =~ /^\+[$;\s]*(?:\{.*\}|([0-9a-z_]+\s*,\s*)+|[a-z_]+\s*\(.*\))\s*,?[$;\s]*\\?\s*$/i) {
 				$msg_type = "";
 
 			# URL ($rawline is used in case the URL is in a comment)
@@ -2862,6 +2863,10 @@ sub process {
 				$msg_type = "";
 			# Multiline macros often use '\' as the last, 81st symbol
 			} elsif ($line =~ /^\+.*\\$/ && $length == $max_line_length + 1) {
+				$msg_type = "";
+			# Comment which is used as a header in array initializer
+			# /* FOO  BAR  BAZ */
+			} elsif ($rawline =~ /^.\s*\/\*[a-zA-Z_\s]+\*\/\s*$/) {
 				$msg_type = "";
 
 			# Otherwise set the alternate message types
@@ -2991,7 +2996,7 @@ sub process {
 
 # allow spaces used for alignment after '{', ',' and before '}' in array initializers
 
-			} elsif ($s =~ /^\{.*\}\s*,$/) {
+			} elsif ($s =~ /^(?:.*,.*)+\s*,$/) {
 				if ($s =~ /[^,\{\s](\s{2,})(.)/) {
 					$pos = $-[1];
 					$ok = 0 if $2 ne '}';
