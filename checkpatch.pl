@@ -1241,11 +1241,11 @@ sub sanitise_line {
 		}
 
 		#print "c<$c> SQ<$sanitise_quote>\n";
-		if ($off != 0 && $sanitise_quote eq '*/' && $c ne "\t") {
+		if ($off != 0 && $sanitise_quote eq '*/') {
 			substr($res, $off, 1, $;);
-		} elsif ($off != 0 && $sanitise_quote eq '//' && $c ne "\t") {
+		} elsif ($off != 0 && $sanitise_quote eq '//') {
 			substr($res, $off, 1, $;);
-		} elsif ($off != 0 && $sanitise_quote && $c ne "\t") {
+		} elsif ($off != 0 && $sanitise_quote) {
 			substr($res, $off, 1, 'X');
 		} else {
 			substr($res, $off, 1, $c);
