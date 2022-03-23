@@ -473,6 +473,7 @@ our $allocFunctions = qr{(?x:
 
 our $signature_tags = qr{(?xi:
 	Signed-off-by:|
+	Co-authored-by:|
 	Co-developed-by:|
 	Acked-by:|
 	Tested-by:|
