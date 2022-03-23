@@ -454,8 +454,6 @@ our $typeTypedefs = qr{(?x:
 	lua_State
 )};
 
-our $zero_initializer = qr{(?:(?:0[xX])?0+$Int_type?|NULL|false)\b};
-
 our $logFunctions = qr{(?x:
 	say_file_line|
 	(?:log_)?say(?:_error|_crit|_warn|_info|_verbose|_debug|_syserror|)(?:_ratelimited)?|
@@ -3487,17 +3485,6 @@ sub process {
 		# Remove C99 comments.
 		$line =~ s@//.*@@;
 		$opline =~ s@//.*@@;
-
-# check for global initialisers.
-		if ($line =~ /^\+$Type\s*$Ident(?:\s+$Modifier)*\s*=\s*($zero_initializer)\s*;/) {
-			ERROR("GLOBAL_INITIALISERS",
-			      "do not initialise globals to $1\n" . $herecurr);
-		}
-# check for static initialisers.
-		if ($line =~ /^\+.*\bstatic\s.*=\s*($zero_initializer)\s*;/) {
-			ERROR("INITIALISED_STATIC",
-			      "do not initialise statics to $1\n" . $herecurr);
-		}
 
 # check for misordered declarations of char/short/int/long with signed/unsigned
 		while ($sline =~ m{(\b$TypeMisordered\b)}g) {

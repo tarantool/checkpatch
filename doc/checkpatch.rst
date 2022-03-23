@@ -560,17 +560,6 @@ Functions and Variables
 
       int foo(void)
 
-  **GLOBAL_INITIALISERS**
-    Global variables should not be initialized explicitly to
-    0 (or NULL, false, etc.).  Your compiler (or rather your
-    loader, which is responsible for zeroing out the relevant
-    sections) automatically does it for you.
-
-  **INITIALISED_STATIC**
-    Static variables should not be initialized explicitly to zero.
-    Your compiler (or rather your loader) automatically does
-    it for you.
-
   **MULTIPLE_ASSIGNMENTS**
     Multiple assignments on a single line makes the code unnecessarily
     complicated. So on a single line assign value to a single variable
