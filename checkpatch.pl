@@ -810,12 +810,12 @@ sub build_types {
 		  }x;
 	$Type	= qr{
 			$NonptrType
-			(?:(?:\s|\*|\[\])+\s*const|(?:\s|\*\s*(?:const\s*)?|\[\])+|(?:\s*\[\s*\])+){0,4}
+			(?:(?:\s|[\*\&]|\[\])+\s*const|(?:\s|[\*\&]\s*(?:const\s*)?|\[\])+|(?:\s*\[\s*\])+){0,4}
 			(?:\s+$Inline|\s+$Modifier)*
 		  }x;
 	$TypeMisordered	= qr{
 			$NonptrTypeMisordered
-			(?:(?:\s|\*|\[\])+\s*const|(?:\s|\*\s*(?:const\s*)?|\[\])+|(?:\s*\[\s*\])+){0,4}
+			(?:(?:\s|[\*\&]|\[\])+\s*const|(?:\s|[\*\&]\s*(?:const\s*)?|\[\])+|(?:\s*\[\s*\])+){0,4}
 			(?:\s+$Inline|\s+$Modifier)*
 		  }x;
 	$Declare	= qr{(?:$Storage\s+(?:$Inline\s+)?)?$Type};
@@ -3201,7 +3201,7 @@ sub process {
 			# Check for any sort of function declaration.
 			# int foo(something bar, other baz);
 			# void (*store_gdt)(x86_descr_ptr *);
-			if ($prev_values eq 'E' && $s =~ /^(.(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\(\*\s*$Ident\))\s*)\(/s) {
+			if ($prev_values eq 'E' && $s =~ /^(.(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\))\s*)\(/s) {
 				my ($name_len) = length($1);
 
 				my $ctx = $s;
@@ -3209,7 +3209,7 @@ sub process {
 				$ctx =~ s/\)[^\)]*$//;
 
 				for my $arg (split(/\s*,\s*/, $ctx)) {
-					if ($arg =~ /^(?:const\s+)?($Ident)\s*\**\s*(:?\b$Ident)?$/s || $arg =~ /^($Ident)$/s) {
+					if ($arg =~ /^(?:const\s+)?($Ident)\s*[\*\&]*\s*(:?\b$Ident)?$/s || $arg =~ /^($Ident)$/s) {
 
 						possible($1, "E:" . $s);
 					}
@@ -3631,6 +3631,19 @@ sub process {
 			}
 		}
 
+# & goes on type not on variable
+		while ($line =~ m{\b$NonptrType(\s*\&{1,2}\s*)$Ident}g) {
+			my ($from, $to) = ($1, $1);
+			# Should end with a space.
+			$to =~ s/(\S)$/$1 /;
+			# Should not start with a space.
+			$to =~ s/^\s+//;
+			if ($from ne $to) {
+				ERROR("REFERENCE_LOCATION",
+				      "\"foo${from}bar\" should be \"foo${to}bar\"\n" .  $herecurr);
+			}
+		}
+
 # open braces for enum, union and struct go on the same line.
 		if ($line =~ /^.\s*{/ &&
 		    $prevline =~ /^.\s*(?:typedef\s+)?(enum|union|struct)(?:\s+$Ident)?\s*$/) {
@@ -3808,6 +3821,10 @@ sub process {
 				# '*' as part of a type definition -- reported already.
 				} elsif ($opv eq '*_') {
 					#warn "'*' is part of type\n";
+
+				# '&' or '&&' as part of a type definition -- reported already.
+				} elsif ($opv eq '&_' or $opv eq '&&_') {
+					#warn "'&' is part of type\n";
 
 				# unary operators should have a space before and
 				# none after.  May be left adjacent to another

@@ -670,6 +670,15 @@ Spacing and Brackets
       unsigned long long memparse(char *ptr, char **retptr);
       char *match_strdup(substring_t *s);
 
+  **REFERENCE_LOCATION**
+    When using reference data or a function that returns a reference type,
+    the preferred use of & is adjacent to the type name and not adjacent to
+    the data name or function name.
+    Examples::
+
+      int& foo;
+      U& bar(T&& x);
+
   **TRAILING_WHITESPACE**
     Trailing whitespace should always be removed.
     Some editors highlight the trailing whitespace and cause visual
