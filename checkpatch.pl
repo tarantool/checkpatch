@@ -2883,7 +2883,7 @@ sub process {
 		}
 
 # after a line that ends with assignment or open parenthesis, only tabs may be used for indentation
-		if ($rawline =~ /^\+\t* / && $prevline =~ /(?:([\(\{\[])|^\+\s*(?:$Declare\s*)?$Lval\s*=)\s*$/) {
+		if ($rawline =~ /^\+\t* / && $prevline =~ /(?:([\(\{\[])|^\+\s*$Declare\s*$Ident\s*=|^\+\s*$Lval\s*$Assignment)\s*$/) {
 			my $herevet = "$here\n$prevrawline\n" . cat_vet($rawline) . "\n";
 			my $what = defined($1) ? "'$1'" : 'assignment';
 			ERROR("CODE_INDENT",
