@@ -50,7 +50,6 @@ my @ignore = ();
 my $help = 0;
 my $configuration_file = ".checkpatch.conf";
 my $max_line_length = 80;
-my $ignore_perl_version = 0;
 my $minimum_perl_version = 5.10.0;
 my $spelling_file = "$D/spelling.txt";
 my $codespell = 0;
@@ -103,8 +102,6 @@ Options:
                              is all off)
   --test-only=WORD           report only errors containing WORD
                              literally
-  --ignore-perl-version      override checking of perl version.  expect
-                             runtime errors.
   --codespell                Use the codespell dictionary for spelling/typos
                              (default:$codespellfile)
   --codespellfile            Use this codespell dictionary
@@ -253,7 +250,6 @@ GetOptions(
 	'summary!'	=> \$summary,
 	'mailback!'	=> \$mailback,
 	'summary-file!'	=> \$summary_file,
-	'ignore-perl-version!' => \$ignore_perl_version,
 	'debug=s'	=> \%debug,
 	'test-only=s'	=> \$tst_only,
 	'codespell!'	=> \$codespell,
@@ -311,11 +307,9 @@ list_types(0) if ($list_types);
 
 my $exit = 0;
 
-my $perl_version_ok = 1;
 if ($^V && $^V lt $minimum_perl_version) {
-	$perl_version_ok = 0;
 	printf "$P: requires at least perl version %vd\n", $minimum_perl_version;
-	exit(1) if (!$ignore_perl_version);
+	exit(1)
 }
 
 #if no filenames are given, push '-' to read patch from stdin
@@ -983,13 +977,6 @@ if (!$quiet) {
 	hash_show_words(\%use_type, "Used");
 	hash_show_words(\%ignore_type, "Ignored");
 
-	if (!$perl_version_ok) {
-		print << "EOM"
-
-NOTE: perl $^V is not modern enough to detect all possible issues.
-      An upgrade to at least perl $minimum_perl_version is suggested.
-EOM
-	}
 	if ($exit) {
 		print << "EOM"
 
@@ -2558,7 +2545,7 @@ sub process {
 # possible SHA-1 matches.
 # A commit match can span multiple lines so this block attempts to find a
 # complete typical commit on a maximum of 3 lines
-		if ($perl_version_ok && $in_commit_log &&
+		if ($in_commit_log &&
 		    $line !~ /^\s*(?:Link|Patchwork|http|https|BugLink|base-commit):/i &&
 		    $line !~ /^This reverts commit [0-9a-f]{7,40}/ &&
 		    (($line =~ /\bcommit\s+[0-9a-f]{5,}\b/i ||
@@ -2916,8 +2903,7 @@ sub process {
 		}
 
 # check indentation starts on a tab stop
-		if ($perl_version_ok &&
-		    $sline =~ /^\+\t+( +)(?:$c90_Keywords\b|\{\s*$|\}\s*(?:else\b|while\b|\s*$)|$Declare\s*$Ident\s*[;=])/) {
+		if ($sline =~ /^\+\t+( +)(?:$c90_Keywords\b|\{\s*$|\}\s*(?:else\b|while\b|\s*$)|$Declare\s*$Ident\s*[;=])/) {
 			my $indent = length($1);
 			if ($indent % $tabsize) {
 				ERROR("TABSTOP",
@@ -2926,8 +2912,7 @@ sub process {
 		}
 
 # check multi-line statement indentation matches previous line
-		if ($perl_version_ok &&
-		    $prevline =~ /^\+([ \t]*)((?:$c90_Keywords(?:\s+if)\s*)|(?:$Declare\s*)?(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*|(?:(?:\*\s*)*$Lval|$Declare\s*$Ident)\s*=\s*$Ident\s*)\(.*(\&\&|\|\||,)\s*$/) {
+		if ($prevline =~ /^\+([ \t]*)((?:$c90_Keywords(?:\s+if)\s*)|(?:$Declare\s*)?(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*|(?:(?:\*\s*)*$Lval|$Declare\s*$Ident)\s*=\s*$Ident\s*)\(.*(\&\&|\|\||,)\s*$/) {
 			$prevline =~ /^\+(\t*)(.*)$/;
 			my $oldindent = $1;
 			my $rest = $2;
@@ -4015,8 +4000,7 @@ sub process {
 # return is not a function
 		if (defined($stat) && $stat =~ /^.\s*return(\s*)\(/s) {
 			my $spacing = $1;
-			if ($perl_version_ok &&
-			    $stat =~ /^.\s*return\s*($balanced_parens)\s*;\s*$/) {
+			if ($stat =~ /^.\s*return\s*($balanced_parens)\s*;\s*$/) {
 				my $value = $1;
 				$value = deparenthesize($value);
 				if ($value =~ m/^\s*$FuncArg\s*(?:\?|$)/) {
@@ -4042,8 +4026,7 @@ sub process {
 		}
 
 # if statements using unnecessary parentheses - ie: if ((foo == bar))
-		if ($perl_version_ok &&
-		    $line =~ /\bif\s*((?:\(\s*){2,})/) {
+		if ($line =~ /\bif\s*((?:\(\s*){2,})/) {
 			my $openparens = $1;
 			my $count = $openparens =~ tr@\(@\(@;
 			my $msg = "";
@@ -4059,8 +4042,7 @@ sub process {
 #	avoid cases like "foo + BAR < baz"
 #	only fix matches surrounded by parentheses to avoid incorrect
 #	conversions like "FOO < baz() + 5" being "misfixed" to "baz() > FOO + 5"
-		if ($perl_version_ok &&
-		    $line =~ /^\+(.*)\b(?:$Constant|[A-Z_][A-Z0-9_]*)\s*$Compare\s*($LvalOrFunc)/) {
+		if ($line =~ /^\+(.*)\b(?:$Constant|[A-Z_][A-Z0-9_]*)\s*$Compare\s*($LvalOrFunc)/) {
 			my $lead = $1;
 			my $to = $2;
 			if ($lead !~ /(?:$Operators|\.)\s*$/ &&
@@ -4352,8 +4334,7 @@ sub process {
 # do {} while (0) macro tests:
 # single-statement macros do not need to be enclosed in do while (0) loop,
 # macro should not end with a semicolon
-		if ($perl_version_ok &&
-		    $line =~ /^.\s*\#\s*define\s+$Ident(\()?/) {
+		if ($line =~ /^.\s*\#\s*define\s+$Ident(\()?/) {
 			my $ln = $linenr;
 			my $cnt = $realcnt;
 			my ($off, $dstat, $dcond, $rest);
@@ -4585,8 +4566,7 @@ sub process {
 		}
 
 # check for mask then right shift without a parentheses
-		if ($perl_version_ok &&
-		    $line =~ /$LvalOrFunc\s*\&\s*($LvalOrFunc)\s*>>/ &&
+		if ($line =~ /$LvalOrFunc\s*\&\s*($LvalOrFunc)\s*>>/ &&
 		    $4 !~ /^\&/) { # $LvalOrFunc may be &foo, ignore if so
 			ERROR("MASK_THEN_SHIFT",
 			      "Possible precedence defect with mask then right shift - may need parentheses\n" . $herecurr);
@@ -4727,8 +4707,7 @@ sub process {
 		}
 
 # Check for __attribute__ weak, or __weak declarations (may have link issues)
-		if ($perl_version_ok &&
-		    $line =~ /(?:$Declare|$DeclareMisordered)\s*$Ident\s*$balanced_parens\s*(?:$Attribute)?\s*;/ &&
+		if ($line =~ /(?:$Declare|$DeclareMisordered)\s*$Ident\s*$balanced_parens\s*(?:$Attribute)?\s*;/ &&
 		    ($line =~ /\b__attribute__\s*\(\s*\(.*\bweak\b/ ||
 		     $line =~ /\b__weak\b/)) {
 			ERROR("WEAK_DECLARATION",
@@ -4763,8 +4742,7 @@ sub process {
 		}
 
 # Check for misused memsets
-		if ($perl_version_ok &&
-		    defined $stat &&
+		if (defined $stat &&
 		    $stat =~ /^\+(?:.*?)\bmemset\s*\(\s*$FuncArg\s*,\s*$FuncArg\s*\,\s*$FuncArg\s*\)/) {
 
 			my $ms_addr = $2;
@@ -4781,8 +4759,7 @@ sub process {
 		}
 
 # check for naked sscanf
-		if ($perl_version_ok &&
-		    defined $stat &&
+		if (defined $stat &&
 		    $line =~ /\bsscanf\b/ &&
 		    ($stat !~ /$Ident\s*=\s*sscanf\s*$balanced_parens/ &&
 		     $stat !~ /\bsscanf\s*$balanced_parens\s*(?:$Compare)/ &&
@@ -4845,8 +4822,7 @@ sub process {
 		}
 
 # check for function definitions
-		if ($perl_version_ok &&
-		    defined $stat &&
+		if (defined $stat &&
 		    $stat =~ /^.\s*$Declare\s*($Ident)\s*$balanced_parens\s*{/s) {
 			$context_function = $1;
 
@@ -4876,15 +4852,13 @@ sub process {
 
 # alloc style
 # p = alloc(sizeof(struct foo), ...) should be p = alloc(sizeof(*p), ...)
-		if ($perl_version_ok &&
-		    $line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*((?:x)malloc)\s*\(\s*(sizeof\s*\(\s*struct\s+$Lval\s*\))/) {
+		if ($line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*((?:x)malloc)\s*\(\s*(sizeof\s*\(\s*struct\s+$Lval\s*\))/) {
 			ERROR("ALLOC_SIZEOF_STRUCT",
 			      "Prefer $3(sizeof(*$1)...) over $3($4...)\n" . $herecurr);
 		}
 
 # check for realloc arg reuse
-		if ($perl_version_ok &&
-		    $line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*realloc\s*\(\s*($Lval)\s*,/ &&
+		if ($line =~ /\b($Lval)\s*\=\s*(?:$balanced_parens)?\s*realloc\s*\(\s*($Lval)\s*,/ &&
 		    $1 eq $3) {
 			ERROR("REALLOC_ARG_REUSE",
 			      "Reusing the realloc arg is almost always a bug\n" . $herecurr);
@@ -4929,8 +4903,7 @@ sub process {
 		}
 
 # check for switch/default statements without a break;
-		if ($perl_version_ok &&
-		    defined $stat &&
+		if (defined $stat &&
 		    $stat =~ /^\+[$;\s]*(?:case[$;\s]+\w+[$;\s]*:[$;\s]*|)*[$;\s]*\bdefault[$;\s]*:[$;\s]*;/g) {
 			my $cnt = statement_rawlines($stat);
 			my $herectx = get_stat_here($linenr, $cnt, $here);
@@ -4979,16 +4952,14 @@ sub process {
 		}
 
 # likely/unlikely comparisons similar to "(likely(foo) > 0)"
-		if ($perl_version_ok &&
-		    $line =~ /\b((?:un)?likely)\s*\(\s*$FuncArg\s*\)\s*$Compare/) {
+		if ($line =~ /\b((?:un)?likely)\s*\(\s*$FuncArg\s*\)\s*$Compare/) {
 			ERROR("LIKELY_MISUSE",
 			      "Using $1 should generally have parentheses around the comparison\n" . $herecurr);
 		}
 
 # Mode permission misuses where it seems decimal should be octal
 # This uses a shortcut match to avoid unnecessary uses of a slow foreach loop
-		if ($perl_version_ok &&
-		    defined $stat &&
+		if (defined $stat &&
 		    $line =~ /$mode_perms_search/) {
 			foreach my $entry (@mode_permission_funcs) {
 				my $func = $entry->[0];

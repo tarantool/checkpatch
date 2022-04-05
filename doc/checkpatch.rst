@@ -136,11 +136,6 @@ Available options:
    Turn on/off debugging of KEY, where KEY is one of 'values', 'possible',
    'type', and 'attr' (default is all off).
 
- - --ignore-perl-version
-
-   Override checking of perl version.  Runtime errors maybe encountered after
-   enabling this flag if the perl version does not meet the minimum specified.
-
  - --codespell
 
    Use the codespell dictionary for checking spelling errors.
