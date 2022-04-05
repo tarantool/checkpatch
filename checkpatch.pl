@@ -2895,6 +2895,14 @@ sub process {
 			      "code indent should use tabs where possible\n" . $herevet);
 		}
 
+# after a line that ends with assignment or open parenthesis, only tabs may be used for indentation
+		if ($rawline =~ /^\+\t* / && $prevline =~ /(?:([\(\{\[])|^\+\s*(?:$Declare\s*)?$Lval\s*=)\s*$/) {
+			my $herevet = "$here\n$prevrawline\n" . cat_vet($rawline) . "\n";
+			my $what = defined($1) ? "'$1'" : 'assignment';
+			ERROR("CODE_INDENT",
+			      "code indent shouldn't use spaces if the previous line ends with $what\n" . $herevet);
+		}
+
 # check for assignments on the start of a line
 		if ($sline =~ /^\+\s+($Assignment)[^=]/) {
 			ERROR("ASSIGNMENT_CONTINUATIONS",
