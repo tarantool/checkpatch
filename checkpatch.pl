@@ -4600,8 +4600,8 @@ sub process {
 				$decl = $1;
 				$check_comment_line -= 1;
 			}
-			# Skip C++ template
-			while ($check_comment_line >= 2 && $lines[$check_comment_line - 2] =~ /[,>]\s*$/) {
+			# Skip C++ template and typedef
+			while ($check_comment_line >= 2 && $lines[$check_comment_line - 2] =~ /(?:,|>|^.\s*typedef)\s*$/) {
 				$check_comment_line -= 1;
 			}
 			my $func_body_size;
