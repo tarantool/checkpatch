@@ -3083,13 +3083,20 @@ sub process {
 		}
 
 # check if this appears to be the start function declaration, save the name
-		if ($sline =~ /^\+\{\s*$/ &&
-		    $prevline =~ /^\+(?:(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*)?($Ident)\(/) {
-			$context_function = $1;
+		if ($sline =~ /^.\{\s*$/) {
+			# skip possible argument continuation
+			my $n = $linenr - 2;
+			while (defined($lines[$n]) && $lines[$n] =~ /[,\)]\s*$/) {
+				if ($lines[$n] =~ /^.(?:(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*)?($Ident)\(/) {
+					$context_function = $1;
+					last;
+				}
+				$n -= 1;
+			}
 		}
 
 # check if this appears to be the end of function declaration
-		if ($sline =~ /^\+\}\s*$/) {
+		if ($sline =~ /^.\}\s*$/) {
 			undef $context_function;
 		}
 
