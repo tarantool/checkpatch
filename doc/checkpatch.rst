@@ -679,6 +679,13 @@ Spacing and Brackets
     Some editors highlight the trailing whitespace and cause visual
     distractions when editing files.
 
+  **TYPEDEF_NEWLINE**
+    A type should be separated from 'typedef' by a space, not a new line::
+
+      typedef int my_int;
+      typedef int
+      (*my_func)(void);
+
   **UNNECESSARY_PARENTHESES**
     Parentheses are not required in the following cases:
 

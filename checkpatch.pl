@@ -3579,6 +3579,12 @@ sub process {
 			      "Function name and return value type should be placed on different lines\n" . $herecurr)
 		}
 
+# check that there's no new line after typedef
+		if ($line =~ /^\+\s*typedef\s*$/) {
+			ERROR("TYPEDEF_NEWLINE",
+			      "Redundant new line after typedef\n" . $herecurr);
+		}
+
 # check for new typedefs, only function parameters and sparse annotations
 # make sense.
 		if ($line =~ /\btypedef\s/ &&
