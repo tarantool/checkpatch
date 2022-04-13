@@ -3574,7 +3574,9 @@ sub process {
 		}
 
 # check that function name and return value type are placed on different lines
-		if ($line =~ /^\+(?:typedef\s+)?$Declare\s*(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*\(/) {
+		if ($realfile =~ /\bbox\.h$/ && $line =~ /^\+\s*$Declare\s*box_set_/) {
+			# ignore box_set_XXX in box.h
+		} elsif ($line =~ /^\+(?:typedef\s+)?$Declare\s*(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*\(/) {
 			ERROR("FUNCTION_NAME_NO_NEWLINE",
 			      "Function name and return value type should be placed on different lines\n" . $herecurr)
 		}
@@ -4598,6 +4600,8 @@ sub process {
 		my $check_comment_ident;
 		if ($realfile =~ /^test\//) {
 			# ignore tests
+		} elsif ($realfile =~ /\bbox\.h$/ && $line =~ /^\+\s*(?:$Declare)?\s*box_set_/) {
+			# ignore box_set_XXX in box.h
 		} elsif ($line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
 			# function, function pointer, variable / struct member
 			my $decl = $1;
