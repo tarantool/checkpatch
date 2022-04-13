@@ -4261,6 +4261,7 @@ sub process {
 			my $herectx = get_stat_here($linenr, $stmt_cnt, $here);
 
 			if ($dstat ne '' &&
+			    !($dstat =~ /,/ && $dstat !~ /;/) &&			# comma-separated list used as array initializer
 			    $dstat !~ /^(?:$Ident|-?$Constant),$/ &&			# 10, // foo(),
 			    $dstat !~ /^(?:$Ident|-?$Constant);$/ &&			# foo();
 			    $dstat !~ /^[!~-]?(?:$Lval|$Constant)$/ &&			# 10 // foo() // !foo // ~foo // -foo // foo->bar // foo.bar->baz
