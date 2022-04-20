@@ -2660,6 +2660,9 @@ sub process {
 		    ($in_commit_log || $line =~ /^(?:\+|Subject:)/i)) {
 			while ($rawline =~ /(?:^|[^\w\-'`])($misspellings)(?:[^\w\-'`]|$)/gi) {
 				my $typo = $1;
+				# Ignore ALL UPPER CASE words as it may be an abbreviation,
+				# e.g. TAHT - Tahiti Time
+				next if ($typo eq uc($typo));
 				my $blank = copy_spacing($rawline);
 				my $ptr = substr($blank, 0, $-[1]) . "^" x length($typo);
 				my $hereptr = "$hereline$ptr\n";
