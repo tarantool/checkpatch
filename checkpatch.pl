@@ -3811,11 +3811,17 @@ sub process {
 
 				# No spaces for:
 				#   ->
-				#   ::
-				} elsif ($op eq '->' || $op eq '::') {
+				} elsif ($op eq '->') {
 					if ($ctx =~ /Wx.|.xW/) {
 						ERROR("SPACING",
 						      "spaces prohibited around that '$op' $at\n" . $hereptr);
+					}
+
+				# No spaces after ::. A space before :: is allowed for global namespace specifier.
+				} elsif ($op eq '::') {
+					if ($ctx =~ /.xW/) {
+						ERROR("SPACING",
+						      "spaces prohibited after that '$op' $at\n" . $hereptr);
 					}
 
 				# , must not have a space before and must have a space on the right.
