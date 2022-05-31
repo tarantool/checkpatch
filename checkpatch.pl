@@ -3129,7 +3129,7 @@ sub process {
 		    $realline_next);
 #print "LINE<$line>\n";
 		if ($linenr > $suppress_statement &&
-		    $realcnt && $sline =~ /.\s*\S/) {
+		    $realcnt && $sline =~ /.\s*\S/ && $sline !~ /.\s*#/) {
 			($stat, $cond, $line_nr_next, $remain_next, $off_next) =
 				ctx_statement_block($linenr, $realcnt, 0);
 			$stat =~ s/\n./\n /g;
