@@ -4791,33 +4791,15 @@ sub process {
 			      "extern prototypes should be avoided in .h files\n" . $herecurr);
 		}
 
-# check for new externs in .c files.
-		if ($realfile =~ /\.c$/ && defined $stat &&
-		    $stat =~ /^.\s*(?:extern\s+)?$Type\s+($Ident)(\s*)\(/s)
+# check for function identifier and arguments written on different lines
+		if (defined $stat &&
+		    $stat =~ /^.\s*(?:extern\s+)?$Type\s+$Ident(\s*)\(/s)
 		{
-			my $function_name = $1;
-			my $paren_space = $2;
-
-			my $s = $stat;
-			if (defined $cond) {
-				substr($s, 0, length($cond), '');
-			}
-			if ($s =~ /^\s*;/)
-			{
-				ERROR("AVOID_EXTERNS",
-				      "externs should be avoided in .c files\n" .  $herecurr);
-			}
-
+			my $paren_space = $1;
 			if ($paren_space =~ /\n/) {
 				ERROR("FUNCTION_ARGUMENTS",
 				      "arguments for function declarations should follow identifier\n" . $herecurr);
 			}
-
-		} elsif ($realfile =~ /\.c$/ && defined $stat &&
-		    $stat =~ /^.\s*extern\s+/)
-		{
-			ERROR("AVOID_EXTERNS",
-			      "externs should be avoided in .c files\n" .  $herecurr);
 		}
 
 # check for function declarations that have arguments without identifier names
