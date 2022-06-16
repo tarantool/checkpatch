@@ -2094,6 +2094,7 @@ sub process {
 	my $commit_log_has_diff = 0;
 	my $non_utf8_charset = 0;
 	my $has_exec_perm = 0;		#Current file has exec permissions
+	my $is_symlink = 0;
 
 	my $last_git_commit_id_linenr = -1;
 
@@ -2279,10 +2280,15 @@ sub process {
 			if ($realfile ne $newrealfile) {
 				$realfile = $newrealfile;
 				$has_exec_perm = 0;
+				$is_symlink = 0;
 				%check_comment_ignore = ();
 			}
 			$in_commit_log = 0;
 			next
+		}
+		if ($line =~ /^new (file )?mode 0?120/ ||
+		    $line =~ /^index [0-9a-f]+..[0-9a-f]+ 0?120/) {
+			$is_symlink = 1;
 		}
 
 # Check for incorrect file permissions
@@ -2780,7 +2786,7 @@ sub process {
 		}
 
 # check for adding lines without a newline.
-		if ($line =~ /^\+/ && defined $lines[$linenr] && $lines[$linenr] =~ /^\\ No newline at end of file/) {
+		if (!$is_symlink && $line =~ /^\+/ && defined $lines[$linenr] && $lines[$linenr] =~ /^\\ No newline at end of file/) {
 			ERROR("MISSING_EOF_NEWLINE",
 			      "adding a line without newline at end of file\n" . $herecurr);
 		}
