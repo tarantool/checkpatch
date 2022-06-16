@@ -733,10 +733,6 @@ Others
     For DOS-formatted patches, there are extra ^M symbols at the end of
     the line.  These should be removed.
 
-  **EMBEDDED_FILENAME**
-    Embedding the complete filename path inside the file isn't particularly
-    useful as often the path is moved around and becomes incorrect.
-
   **MEMSET**
     The memset use appears to be incorrect.  This may be caused due to
     badly ordered parameters.  Please recheck the usage.

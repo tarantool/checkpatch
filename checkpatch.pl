@@ -2785,12 +2785,6 @@ sub process {
 			      "adding a line without newline at end of file\n" . $herecurr);
 		}
 
-# check for embedded filenames
-		if ($rawline =~ /^\+.*\Q$realfile\E/) {
-			ERROR("EMBEDDED_FILENAME",
-			      "It's generally not useful to have the filename in the file\n" . $herecurr);
-		}
-
 # check for space before tabs.
 		if ($rawline =~ /^\+/ && $rawline =~ / \t/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
