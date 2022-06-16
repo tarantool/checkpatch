@@ -437,7 +437,13 @@ our $UTF8	= qr{
 	| $NON_ASCII_UTF8
 }x;
 
+# Skip all checks for the following paths.
 our $skipPaths = qr{(?x:
+	test\/static\/corpus\/
+)};
+
+# Skip C/C++ source code checks for the following paths.
+our $skipSrcPaths = qr{(?x:
 	src\/lib\/tzcode\/
 )};
 
@@ -2618,6 +2624,8 @@ sub process {
 				$herecurr) if (!$emitted_corrupt++);
 		}
 
+		next if !$file and $realfile =~ /^$skipPaths/;
+
 # UTF-8 regex found at http://www.w3.org/International/questions/qa-forms-utf-8.en.php
 		if (($realfile =~ /^$/ || $line =~ /^\+/) &&
 		    $rawline !~ m/^$UTF8*$/) {
@@ -2801,7 +2809,7 @@ sub process {
 		next if ($realfile !~ /\.(h|c|cc)$/);
 
 # ignore C source files outside the source and test directories when checking patches
-		next if !$file and ($realfile !~ /^(?:src|test)\// || $realfile =~ /^$skipPaths/);
+		next if !$file and ($realfile !~ /^(?:src|test)\// || $realfile =~ /^$skipSrcPaths/);
 
 # line length limit (with some exclusions)
 #
