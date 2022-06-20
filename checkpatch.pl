@@ -3181,7 +3181,7 @@ sub process {
 			} elsif ($s =~ /^.\s*$Ident\s*\*\s*$Ident\s*;\s*$/ && $lines[$realline_next] =~ /\}\)/) {
 
 			# declarations always start with types
-			} elsif ($prev_values eq 'E' && $s =~ /^.\s*(?:$Storage\s+)?(?:$Inline\s+)?(?:const\s+)?((?:\s*$Ident)+?)\b\s*\**\s*(?:$Ident|\(\*[^\)]*\))(?:\s*$Modifier)?\s*(?:;|=|,|\()/s) {
+			} elsif ($prev_values eq 'E' && $s =~ /^.\s*(?:$Storage\s+)?(?:$Inline\s+)?(?:const\s+)?((?:\s*$Ident)+?)\b\s*[\*&]*\s*(?:$Ident|operator\s*(?:$Operators|$Assignment)|\(\*[^\)]*\))(?:\s*$Modifier)?\s*(?:;|=|,|\()/s) {
 				my $type = $1;
 				$type =~ s/\s+/ /g;
 				possible($type, "B:" . $s);
@@ -3199,7 +3199,7 @@ sub process {
 			# Check for any sort of function declaration.
 			# int foo(something bar, other baz);
 			# void (*store_gdt)(x86_descr_ptr *);
-			if ($prev_values eq 'E' && $s =~ /^(.(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\))\s*)\(/s) {
+			if ($prev_values eq 'E' && $s =~ /^(.(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\)|operator\s*(?:$Operators|$Assignment))\s*)\(/s) {
 				my ($name_len) = length($1);
 
 				my $ctx = $s;
