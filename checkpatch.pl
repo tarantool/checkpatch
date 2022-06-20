@@ -3804,6 +3804,14 @@ sub process {
 					 $opline =~ /(?:^|<).*(?:,\s*$|>)/) {
 					# skip template
 
+				} elsif ($realfile =~ /\.(h|cc)$/ &&
+					 $opline =~ /operator\s*(\Q$op\E)\s*\(/ && $-[1] == $off) {
+					# C++ operator overload
+					if ($ctx =~ /Wx.|.xW/) {
+						ERROR("SPACING",
+						      "spaces prohibited around that '$op' $at\n" . $hereptr);
+					}
+
 				# No spaces for:
 				#   ->
 				} elsif ($op eq '->') {
