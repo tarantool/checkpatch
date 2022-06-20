@@ -667,12 +667,12 @@ Spacing and Brackets
 
   **REFERENCE_LOCATION**
     When using reference data or a function that returns a reference type,
-    the preferred use of & is adjacent to the type name and not adjacent to
-    the data name or function name.
+    the preferred use of & is adjacent to the data name or function name
+    and not adjacent to the type name.
     Examples::
 
-      int& foo;
-      U& bar(T&& x);
+      int &foo;
+      U &bar(T &&x);
 
   **TRAILING_WHITESPACE**
     Trailing whitespace should always be removed.

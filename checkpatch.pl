@@ -3640,10 +3640,10 @@ sub process {
 # & goes on type not on variable
 		while ($line =~ m{\b$NonptrType(\s*\&{1,2}\s*)$Ident}g) {
 			my ($from, $to) = ($1, $1);
-			# Should end with a space.
-			$to =~ s/(\S)$/$1 /;
-			# Should not start with a space.
-			$to =~ s/^\s+//;
+			# Should start with a space.
+			$to =~ s/^(\S)/ $1/;
+			# Should not end with a space.
+			$to =~ s/\s+$//;
 			if ($from ne $to) {
 				ERROR("REFERENCE_LOCATION",
 				      "\"foo${from}bar\" should be \"foo${to}bar\"\n" .  $herecurr);
