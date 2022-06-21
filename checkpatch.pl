@@ -3165,11 +3165,11 @@ sub process {
 			$s =~ s/{.*$//s;
 			$s =~ s/^.*}//s;
 
-			# Ignore goto labels.
-			if ($s =~ /$Ident:\*$/s) {
+			# Ignore goto labels and C++ access specifiers.
+			$s =~ s/^.$Ident://m;
 
 			# defintion in for() loop and catch() block
-			} elsif ($s =~ /^.\s*(?:for|\}?\s*catch)\s*\(\s*(?:const\s+)?($Ident)(?:\s*\bconst\b\s*|\s*\*\s*)*$Ident\b/) {
+			if ($s =~ /^.\s*(?:for|\}?\s*catch)\s*\(\s*(?:const\s+)?($Ident)(?:\s*\bconst\b\s*|\s*\*\s*)*$Ident\b/) {
 				possible($1, "A:" . $s);
 
 			# Ignore functions being called
