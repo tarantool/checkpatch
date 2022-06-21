@@ -5098,13 +5098,12 @@ sub process {
 		print "total: $cnt_error errors, $cnt_lines lines checked\n";
 	}
 
-	if ($quiet == 0) {
+	if ($clean == 1 && $quiet == 0) {
 		print "\n";
-		if ($clean == 1) {
-			print "$vname has no obvious style problems and is ready for submission.\n";
-		} else {
-			print "$vname has style problems, please review.\n";
-		}
+		print "$vname has no obvious style problems and is ready for submission.\n";
+	}
+	if ($clean == 0) {
+		print "$vname has style problems, please review.\n";
 	}
 	return $clean;
 }
