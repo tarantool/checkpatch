@@ -4854,7 +4854,7 @@ sub process {
 			for (my $n = 0; $n < $cnt; $n++) {
 				my $rl = raw_line($linenr, $n);
 				$herectx .=  $rl . "\n";
-				$ok = 1 if ($rl =~ /^[ \+]\{/);
+				$ok = 1 if ($rl =~ /^[ \+]\s*\{/);
 				# allow opening and closing braces on the same line
 				$ok = 1 if ($rl =~ /\{.*\}/);
 				last if $rl =~ /^[ \+].*\{/;
