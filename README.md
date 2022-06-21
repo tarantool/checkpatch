@@ -10,7 +10,7 @@ script used for checking patches submitted for the Linux kernel.
 The documentation is [here](doc/checkpatch.rst).
 
 If you find any bugs, please don't hesitate to report them to the
-[issue tracker](checkpatch-issues).
+[issue tracker][checkpatch-issues].
 
 ## Quick start
 
