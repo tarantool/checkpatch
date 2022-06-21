@@ -3199,7 +3199,7 @@ sub process {
 			# Check for any sort of function declaration.
 			# int foo(something bar, other baz);
 			# void (*store_gdt)(x86_descr_ptr *);
-			if ($prev_values eq 'E' && $s =~ /^(.(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\)|operator\s*(?:$Operators|$Assignment))\s*)\(/s) {
+			if ($prev_values eq 'E' && $s =~ /^(.\s*(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\)|operator\s*(?:$Operators|$Assignment))\s*)\(/s) {
 				my ($name_len) = length($1);
 
 				my $ctx = $s;
