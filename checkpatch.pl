@@ -937,7 +937,7 @@ for my $filename (@ARGV) {
 	my $oldfile = $file;
 	$file = 1 if ($is_git_file);
 	if ($git) {
-		open($FILE, '-|', "git format-patch -M --stdout -1 $filename") ||
+		open($FILE, '-|', "git format-patch --no-stat -M --stdout -1 $filename") ||
 			die "$P: $filename: git format-patch failed - $!\n";
 	} elsif ($file) {
 		open($FILE, '-|', "diff -u /dev/null $filename") ||
@@ -2397,7 +2397,11 @@ sub process {
 		}
 
 # Check for patch separator
-		if ($line =~ /^---$/) {
+#
+# Ignore in the git mode, because we format patches with --no-stat.
+# This is needed so as not to skip the rest of the commit log message
+# when it contains a line with three dashes (e.g. YaML code).
+		if (!$git && $line =~ /^---$/) {
 			$has_patch_separator = 1;
 			$in_commit_log = 0;
 		}
