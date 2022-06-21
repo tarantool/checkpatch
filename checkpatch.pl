@@ -3199,7 +3199,15 @@ sub process {
 			# Check for any sort of function declaration.
 			# int foo(something bar, other baz);
 			# void (*store_gdt)(x86_descr_ptr *);
-			if ($prev_values eq 'E' && $s =~ /^(.\s*(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\)|operator\s*(?:$Operators|$Assignment))\s*)\(/s) {
+			#
+			# Detect C++ constructors as well.
+			# Foo(const Foo& other);
+			#
+			# We have to be careful here, because a constructor declaration looks like a function call
+			# so we check that we are not in a function context.
+			if ($prev_values eq 'E' &&
+			    $s =~ /^(.\s*(?:($Ident)|(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\)|operator\s*(?:$Operators|$Assignment)))\s*)\(/s &&
+			    (!defined $2 || !defined $context_function || $2 eq $context_function)) {
 				my ($name_len) = length($1);
 
 				my $ctx = $s;
