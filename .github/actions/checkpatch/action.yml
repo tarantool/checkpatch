@@ -11,5 +11,5 @@ runs:
       with:
         repository: tarantool/checkpatch
         path: 'checkpatch'
-    - run: checkpatch/checkpatch.pl --color=always --git ${{ inputs.revision-range }}
+    - run: checkpatch/checkpatch.pl --color=always --show-types --git ${{ inputs.revision-range }}
       shell: bash
