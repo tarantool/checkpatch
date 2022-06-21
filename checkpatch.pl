@@ -3163,6 +3163,7 @@ sub process {
 
 			my $s = $stat;
 			$s =~ s/{.*$//s;
+			$s =~ s/^.*}//s;
 
 			# Ignore goto labels.
 			if ($s =~ /$Ident:\*$/s) {
