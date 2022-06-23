@@ -610,6 +610,10 @@ our $C90_int_types = qr{(?x:
 	(?:(?:un)?signed\s+)?int
 )};
 
+our $CXX_cast_operators = qr{(?x:
+	(?:const|dynamic|reinterpret|static)_cast
+)};
+
 our @typeListFile = ();
 
 # We don't have any predefined modifiers yet, but the modifier list can't be
@@ -1693,7 +1697,8 @@ sub annotate_values {
 				$av_preprocessor = 0;
 			}
 
-		} elsif ($cur =~ /^(\(\s*$Type\s*)\)/ && $av_pending eq '_') {
+		} elsif (($cur =~ /^(\(\s*$Type\s*)\)/ ||
+			  $cur =~ /^($CXX_cast_operators\s*<\s*$Type\s*)>/ ) && $av_pending eq '_') {
 			print "CAST($1)\n" if ($dbg_values > 1);
 			push(@av_paren_type, $type);
 			$type = 'c';
@@ -3200,6 +3205,11 @@ sub process {
 				possible($1, "D:" . $s);
 			}
 
+			# C++ type cast
+			while ($s =~ /\b$CXX_cast_operators\s*<\s*($Ident)[\s\*]+\s*>/sg) {
+				possible($1, "E:" . $s);
+			}
+
 			# Check for any sort of function declaration.
 			# int foo(something bar, other baz);
 			# void (*store_gdt)(x86_descr_ptr *);
@@ -3221,7 +3231,7 @@ sub process {
 				for my $arg (split(/\s*,\s*/, $ctx)) {
 					if ($arg =~ /^(?:const\s+)?($Ident)\s*[\*\&]*\s*(:?\b$Ident)?$/s || $arg =~ /^($Ident)$/s) {
 
-						possible($1, "E:" . $s);
+						possible($1, "F:" . $s);
 					}
 				}
 			}
