@@ -9,6 +9,7 @@
 
 use strict;
 use warnings;
+use utf8;
 use POSIX;
 use File::Basename;
 use Cwd 'abs_path';
@@ -2141,6 +2142,7 @@ sub process {
 	foreach my $rawline (@rawlines) {
 		$linenr++;
 		$line = $rawline;
+		utf8::decode($line);
 
 		if ($rawline =~ /^\@\@ -\d+(?:,\d+)? \+(\d+)(,(\d+))? \@\@/) {
 			$realline=$1-1;
