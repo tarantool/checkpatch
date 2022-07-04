@@ -1156,6 +1156,7 @@ sub copy_spacing {
 
 sub line_stats {
 	my ($line) = @_;
+	utf8::decode($line);
 
 	# Drop the diff line leader and expand tabs
 	$line =~ s/^.//;
