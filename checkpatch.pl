@@ -5093,19 +5093,19 @@ sub process {
 	if ($is_patch && $has_commit_log) {
 		if (!$has_doc && !exists($commit_log_tags{'NO_DOC'})) {
 			ERROR("NO_DOC",
-			      "Please add doc or NO_DOC=<reason> tag");
+			      "Please add doc or NO_DOC=<reason> tag\n");
 		}
 		if ($has_doc && exists($commit_log_tags{'NO_DOC'})) {
 			ERROR("REDUNDANT_TAG",
-			      "Redundant NO_DOC tag");
+			      "Redundant NO_DOC tag\n");
 		}
 		if (!$has_changelog && !exists($commit_log_tags{'NO_CHANGELOG'})) {
 			ERROR("NO_CHANGELOG",
-			      "Please add changelog or NO_CHANGELOG=<reason> tag");
+			      "Please add changelog or NO_CHANGELOG=<reason> tag\n");
 		}
 		if (!$has_test && !exists($commit_log_tags{'NO_TEST'})) {
 			ERROR("NO_TEST",
-			      "Please add test or NO_TEST=<reason> tag");
+			      "Please add test or NO_TEST=<reason> tag\n");
 		}
 	}
 
