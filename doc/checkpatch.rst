@@ -233,6 +233,20 @@ Commit message
     comments.  To solve this problem addition of a single space
     infront of the log line is enough.
 
+  **COMMIT_LOG_LONG_LINE**
+    Commit log should fit in 75 characters. If you need to insert a longer
+    line into the commit log (e.g. an extract from a log or a test output),
+    please surround the corresponding section with NO_WRAP, for example::
+
+      Normal text.
+
+      NO_WRAP
+      Long line.
+      Another long line.
+      NO_WRAP
+
+      Normal text.
+
   **COMMIT_MESSAGE**
     The patch is missing a commit description.  A brief
     description of the changes made by the patch should be added.
