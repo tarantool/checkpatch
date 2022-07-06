@@ -2727,7 +2727,7 @@ sub process {
 		if ($realfile =~ /^changelogs\/unreleased/) {
 			$has_changelog = 1;
 		}
-		if ($realfile =~ /^test\/.*\//) {
+		if ($realfile =~ /^(?:static-build\/)?test\/.*\//) {
 			$has_test = 1;
 		}
 
