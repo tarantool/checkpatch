@@ -2826,7 +2826,7 @@ sub process {
 		next if ($realfile !~ /\.(h|c|cc)$/);
 
 # ignore C source files outside the source and test directories when checking patches
-		next if !$file and ($realfile !~ /^(?:src|test)\// || $realfile =~ /^$skipSrcPaths/);
+		next if !$file and ($realfile !~ /^(?:src|test|perf)\// || $realfile =~ /^$skipSrcPaths/);
 
 # line length limit (with some exclusions)
 #
@@ -4641,7 +4641,7 @@ sub process {
 		my $check_comment = 0;
 		my $check_comment_line = $linenr;
 		my $check_comment_ident;
-		if ($realfile =~ /^test\//) {
+		if ($realfile =~ /^(?:test|perf)\//) {
 			# ignore tests
 		} elsif ($realfile =~ /\bbox\.h$/ && $line =~ /^\+\s*(?:$Declare)?\s*box_set_/) {
 			# ignore box_set_XXX in box.h
