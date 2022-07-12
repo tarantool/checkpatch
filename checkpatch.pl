@@ -4693,6 +4693,10 @@ sub process {
 				}
 			}
 		} elsif ($line =~ /^\+\s*struct\s+(?:$Modifier\s+)*($Ident)\s*(?:{\s*)?$/) {
+			# Skip C++ template
+			while ($check_comment_line >= 2 && $lines[$check_comment_line - 2] =~ /(?:,|>)\s*$/) {
+				$check_comment_line -= 1;
+			}
 			# struct
 			$check_comment_ident = $1;
 			$check_comment = $check_comment_ident !~ /^$Attribute$/ && !defined($context_function);
