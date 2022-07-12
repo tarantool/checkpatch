@@ -4695,7 +4695,7 @@ sub process {
 		} elsif ($line =~ /^\+\s*struct\s+(?:$Modifier\s+)*($Ident)\s*(?:{\s*)?$/) {
 			# struct
 			$check_comment_ident = $1;
-			$check_comment = !defined($context_function);
+			$check_comment = $check_comment_ident !~ /^$Attribute$/ && !defined($context_function);
 		}
 		if ($check_comment && !ctx_has_comment($first_line, $check_comment_line)) {
 			ERROR("UNCOMMENTED_DEFINITION",
