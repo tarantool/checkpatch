@@ -377,6 +377,7 @@ our $Ident	= qr{
 		}x;
 our $Storage	= qr{extern|static};
 our $Attribute	= qr{
+			typename|
 			const|
 			volatile|
 			alignas|
