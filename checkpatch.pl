@@ -371,6 +371,7 @@ if ($terse) {
 my $emitted_corrupt = 0;
 
 our $Ident	= qr{
+			(?:::)?(?:[A-Za-z_][A-Za-z\d_]*::)*
 			[A-Za-z_][A-Za-z\d_]*
 			(?:\s*\#\#\s*[A-Za-z_][A-Za-z\d_]*)*
 		}x;
