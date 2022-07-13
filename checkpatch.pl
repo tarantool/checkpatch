@@ -3228,7 +3228,7 @@ sub process {
 			# We have to be careful here, because a constructor declaration looks like a function call
 			# so we check that we are not in a function context.
 			if ($prev_values eq 'E' &&
-			    $s =~ /^(.\s*(?:($Ident)|(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\)|operator\s*(?:$Operators|$Assignment)))\s*)\(/s &&
+			    $s =~ /^(.(?:\s*template\b.*>)?\s*(?:($Ident)|(?:typedef\s*)?(?:(?:$Storage|$Inline)\s*)*\s*$Type\s*(?:\b$Ident|\([\*\&]\s*$Ident\)|operator\s*(?:$Operators|$Assignment)))\s*)\(/s &&
 			    (!defined $2 || !defined $context_function || $2 eq $context_function)) {
 				my ($name_len) = length($1);
 
