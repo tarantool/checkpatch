@@ -3835,6 +3835,10 @@ sub process {
 					 $opline =~ /(?:^|<).*(?:,\s*$|>)/) {
 					# skip template
 
+				} elsif ($realfile =~ /\.(h|cc)$/ && $op =~ /[&*]/ &&
+					 $opline =~ /(\Q$op\E[>,])/ && $-[1] == $off) {
+					# pointer or reference in template arguments
+
 				} elsif ($realfile =~ /\.(h|cc)$/ &&
 					 $opline =~ /operator\s*(\Q$op\E)\s*\(/ && $-[1] == $off) {
 					# C++ operator overload
