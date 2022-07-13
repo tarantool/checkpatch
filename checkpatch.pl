@@ -3136,7 +3136,7 @@ sub process {
 		}
 
 # check if this appears to be the end of struct declaration
-		if ($sline =~ /^\+\}\s*;\s*$/) {
+		if ($sline =~ /^[\+\s]\}\s*;\s*$/) {
 			undef $context_struct;
 		}
 
