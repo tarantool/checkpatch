@@ -2793,7 +2793,7 @@ sub process {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
 			ERROR("DOS_LINE_ENDINGS",
 			      "DOS line endings\n" . $herevet);
-		} elsif ($rawline =~ /^\+.*\S\s+$/ || $rawline =~ /^\+\s+$/) {
+		} elsif ($realfile !~ /\.patch$/ && ($rawline =~ /^\+.*\S\s+$/ || $rawline =~ /^\+\s+$/)) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
 			ERROR("TRAILING_WHITESPACE",
 			      "trailing whitespace\n" . $herevet);
