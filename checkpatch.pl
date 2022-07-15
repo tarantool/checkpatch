@@ -4743,7 +4743,9 @@ sub process {
 		}
 
 # Check for compiler attributes
-		if ($rawline =~ /\b__attribute__\s*\(\s*($balanced_parens)\s*\)/) {
+# Ignore src/trivia/util.h, because we define attribute specifiers there
+		if ($realfile ne 'src/trivia/util.h' &&
+		    $rawline =~ /\b__attribute__\s*\(\s*($balanced_parens)\s*\)/) {
 			my $attr = $1;
 			$attr =~ s/\s*\(\s*(.*)\)\s*/$1/;
 
