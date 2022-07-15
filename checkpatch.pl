@@ -3624,6 +3624,8 @@ sub process {
 		    $line !~ /\btypedef\s+$Type$/ &&
 		    $line !~ /\btypedef\s+$Type\s*\(\s*\*?$Ident\s*\)\s*\(/ &&
 		    $line !~ /\btypedef\s+$Type\s+$Ident\s*\(/ &&
+# allow new typedefs ending with double underscoe - we may use them internall to tweak the compiler
+		    $line !~ /__\s*;/ &&
 		    $line !~ /\b$typeTypedefs\b/) {
 			ERROR("NEW_TYPEDEFS",
 			      "do not add new typedefs\n" . $herecurr);
