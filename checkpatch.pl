@@ -3624,8 +3624,9 @@ sub process {
 		    $line !~ /\btypedef\s+$Type$/ &&
 		    $line !~ /\btypedef\s+$Type\s*\(\s*\*?$Ident\s*\)\s*\(/ &&
 		    $line !~ /\btypedef\s+$Type\s+$Ident\s*\(/ &&
-# allow new typedefs ending with double underscoe - we may use them internall to tweak the compiler
-		    $line !~ /__\s*;/ &&
+# allow new typedefs ending with double underscore - we may use them internally to tweak the compiler
+# typedefs that start with `box_` or `tt_` is a part of the internal API so they are allowed, as well
+		    $line !~ /(?:__|\b(?:box|tt)_$Ident\_t)\s*;/ &&
 		    $line !~ /\b$typeTypedefs\b/) {
 			ERROR("NEW_TYPEDEFS",
 			      "do not add new typedefs\n" . $herecurr);
