@@ -450,6 +450,10 @@ our $skipSrcPaths = qr{(?x:
 	src\/lib\/tzcode\/
 )};
 
+our $typeMacros = qr{(?x:
+	LIGHT
+)};
+
 our $typeTypedefs = qr{(?x:
 	(?:__)?(?:[us]_?)?int_?(?:8|16|32|64)_t|
 	u_(?:char|short|int|long)|
@@ -802,7 +806,7 @@ sub build_types {
 	$NonptrType	= qr{
 			(?:$Modifier\s+|const\s+)*
 			(?:
-				(?:typeof|__typeof__)\s*\([^\)]*\)|
+				(?:typeof|__typeof__|(?:struct\s+)?$typeMacros)\s*\([^\)]*\)|
 				(?:$typeTypedefs\b)|
 				(?:${all}\b)
 			)
