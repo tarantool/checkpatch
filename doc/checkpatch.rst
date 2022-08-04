@@ -228,11 +228,6 @@ Commit message
     The signed-off-by line does not fall in line with the standards
     specified by the community.
 
-  **COMMIT_COMMENT_SYMBOL**
-    Commit log lines starting with a '#' are ignored by git as
-    comments.  To solve this problem addition of a single space
-    infront of the log line is enough.
-
   **COMMIT_LOG_LONG_LINE**
     Commit log should fit in 75 characters. If you need to insert a longer
     line into the commit log (e.g. an extract from a log or a test output),

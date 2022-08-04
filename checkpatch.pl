@@ -2565,12 +2565,6 @@ sub process {
 			$commit_log_long_line = 1;
 		}
 
-# Check for lines starting with a #
-		if ($in_commit_log && $line =~ /^#/) {
-			ERROR("COMMIT_COMMENT_SYMBOL",
-			      "Commit log lines starting with '#' are dropped by git as comments\n" . $herecurr);
-		}
-
 # Check for git id commit length and improperly formed commit descriptions
 # A correctly formed commit description is:
 #    commit <SHA-1 hash length 12+ chars> ("Complete commit subject")
