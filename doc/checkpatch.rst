@@ -776,3 +776,8 @@ Others
 
   **TYPO_SPELLING**
     Some words may have been misspelled.  Consider reviewing them.
+
+  **UNSAFE_FUNCTION**
+    Some standard C functions are deprecated, because they are unsafe.
+    For example, one should use 'snprintf' instead of 'sprintf', because
+    the latter may write beyond the provided buffer.

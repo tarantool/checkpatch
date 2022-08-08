@@ -4935,6 +4935,24 @@ sub process {
 			      "Please use x$func instead of $func\n" . $herecurr);
 		}
 
+# warn about unsafe functions
+		if ($line =~ /\b($Ident)\s*\(/) {
+			my $func = $1;
+			my %func_list = (
+				"sprintf"		=> "snprintf",
+				"vsprintf"		=> "vsnprintf",
+				"strcpy"		=> "strlcpy",
+				"strncpy"		=> "strlcpy",
+				"strcat"		=> "strlcat",
+				"strncat"		=> "strlcat",
+			);
+			if (exists($func_list{$func})) {
+				my $new = $func_list{$func};
+				ERROR("UNSAFE_FUNCTION",
+				      "$func is unsafe. Please use $new instead\n" . $herecurr);
+			}
+		}
+
 # check for multiple semicolons
 		if ($line =~ /;\s*;\s*$/) {
 			ERROR("ONE_SEMICOLON",
