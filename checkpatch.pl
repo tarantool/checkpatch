@@ -4659,9 +4659,13 @@ sub process {
 			my $decl = $1;
 			my $is_func = defined($2);
 			$check_comment_ident = defined($2) ? $2 : defined($3) ? $3 : $4;
-			if (!defined($decl) && $prevline =~ /^\+\s*($Declare)\s*$/) {
+			if (!defined($decl) && $prevline =~ /^[\+ ]\s*($Declare)\s*$/) {
 				$decl = $1;
 				$check_comment_line -= 1;
+				# Skip deleted lines
+				while ($check_comment_line >= 1 && $lines[$check_comment_line - 1] =~ /^-/) {
+					$check_comment_line -= 1;
+				}
 			}
 			# Skip C++ template and typedef
 			while ($check_comment_line >= 2 && $lines[$check_comment_line - 2] =~ /(?:^-|(?:,|>|^.\s*typedef)\s*$)/) {
