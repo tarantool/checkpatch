@@ -2142,6 +2142,7 @@ sub process {
 	my $has_changelog = 0;
 	my $has_doc = 0;
 	my $has_test = 0;
+	my $is_test = 0;
 
 	# Pre-scan the patch sanitizing the lines.
 
@@ -2827,6 +2828,8 @@ sub process {
 
 # ignore C source files outside the source and test directories when checking patches
 		next if !$file and ($realfile !~ /^(?:src|test|perf)\// || $realfile =~ /^$skipSrcPaths/);
+
+		$is_test = ($realfile =~ /^(?:test|perf)\//);
 
 # line length limit (with some exclusions)
 #
@@ -3579,7 +3582,7 @@ sub process {
 		}
 
 # check for non-global char *foo[] = {"bar", ...} declarations.
-		if ($line =~ /^.\s+(?:static\s+|const\s+)?char\s+\*\s*\w+\s*\[\s*\]\s*=\s*\{/) {
+		if (!$is_test && $line =~ /^.\s+(?:static\s+|const\s+)?char\s+\*\s*\w+\s*\[\s*\]\s*=\s*\{/) {
 			ERROR("STATIC_CONST_CHAR_ARRAY",
 			      "char * array declaration might be better as static const\n" . $herecurr);
 		}
@@ -4648,7 +4651,7 @@ sub process {
 		my $check_comment = 0;
 		my $check_comment_line = $linenr;
 		my $check_comment_ident;
-		if ($realfile =~ /^(?:test|perf)\//) {
+		if ($is_test) {
 			# ignore tests
 		} elsif ($realfile =~ /\bbox\.h$/ && $line =~ /^\+\s*(?:$Declare)?\s*box_set_/) {
 			# ignore box_set_XXX in box.h
