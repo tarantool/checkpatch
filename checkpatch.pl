@@ -4655,8 +4655,8 @@ sub process {
 			# ignore tests
 		} elsif ($realfile =~ /\bbox\.h$/ && $line =~ /^\+\s*(?:$Declare)?\s*box_set_/) {
 			# ignore box_set_XXX in box.h
-		} elsif ($line =~ /^\+\s*(?:$Declare)?\s*generic_/) {
-			# generic_XXX functions are stubs so comments are not required
+		} elsif ($line =~ /^\+\s*(?:$Declare)?\s*(?:generic_|disabled_|exhausted_)/) {
+			# generic_XXX, disabled_XXX, exhausted_XXX are functions are stubs so comments are not required
 		} elsif ($line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
 			# function, function pointer, variable / struct member
 			my $decl = $1;
