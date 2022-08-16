@@ -4655,6 +4655,8 @@ sub process {
 			# ignore tests
 		} elsif ($realfile =~ /\bbox\.h$/ && $line =~ /^\+\s*(?:$Declare)?\s*box_set_/) {
 			# ignore box_set_XXX in box.h
+		} elsif ($line =~ /\boperator\s*()/) {
+			# operator() is used as a callback so a comment isn't necessary
 		} elsif ($line =~ /^\+\s*(?:$Declare)?\s*(?:generic_|disabled_|exhausted_)/) {
 			# generic_XXX, disabled_XXX, exhausted_XXX are functions are stubs so comments are not required
 		} elsif ($line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
