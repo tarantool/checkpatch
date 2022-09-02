@@ -774,6 +774,11 @@ Others
   **PRINTF_0XDECIMAL**
     Prefixing 0x with decimal output is defective and should be corrected.
 
+  **TEST_RESULT_FILE**
+    For regression tests, there are .result files. Tests with .result files
+    should be avoided. It is recommended to use Luatest or TAP for Tarantool
+    regression tests.
+
   **TYPO_SPELLING**
     Some words may have been misspelled.  Consider reviewing them.
 

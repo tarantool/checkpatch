@@ -2140,6 +2140,7 @@ sub process {
 
 	my %commit_log_tags = ();
 	my $has_changelog = 0;
+	my $warned_about_test_result_file = 0;
 	my $has_doc = 0;
 	my $has_test = 0;
 	my $is_test = 0;
@@ -2821,6 +2822,14 @@ sub process {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
 			ERROR("TABSTOP",
 			      "please, use spaces instead of tabs\n" . $herevet);
+		}
+
+		if (!$warned_about_test_result_file &&
+		     $realfile =~ /^test\/.*\.result$/ &&
+		     $line =~ /^\+/) {
+			$warned_about_test_result_file = 1;
+			ERROR("TEST_RESULT_FILE",
+			      "Please avoid tests with .result files\n");
 		}
 
 # check we are in a valid C source file if not then ignore this hunk
