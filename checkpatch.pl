@@ -2141,6 +2141,7 @@ sub process {
 	my %commit_log_tags = ();
 	my $has_changelog = 0;
 	my $warned_about_test_result_file = 0;
+	my $new_file = 0;
 	my $has_doc = 0;
 	my $has_test = 0;
 	my $is_test = 0;
@@ -2303,6 +2304,11 @@ sub process {
 			$in_commit_log = 0;
 			next
 		}
+
+		if ($line =~ /^new (file )?/) {
+			$new_file = 1;
+		}
+
 		if ($line =~ /^new (file )?mode 0?120/ ||
 		    $line =~ /^index [0-9a-f]+..[0-9a-f]+ 0?120/) {
 			$is_symlink = 1;
@@ -2826,10 +2832,10 @@ sub process {
 
 		if (!$warned_about_test_result_file &&
 		     $realfile =~ /^test\/.*\.result$/ &&
-		     $line =~ /^\+/) {
+		     $new_file) {
 			$warned_about_test_result_file = 1;
 			ERROR("TEST_RESULT_FILE",
-			      "Please avoid tests with .result files\n");
+			      "Please avoid new tests with .result files\n");
 		}
 
 # check we are in a valid C source file if not then ignore this hunk
