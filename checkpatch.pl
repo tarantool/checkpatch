@@ -2305,8 +2305,8 @@ sub process {
 			next
 		}
 
-		if ($line =~ /^new (file )?/) {
-			$new_file = 1;
+		if ($line =~ /^---\s(\S+)$/) {
+			$new_file = $1 eq "/dev/null"
 		}
 
 		if ($line =~ /^new (file )?mode 0?120/ ||
