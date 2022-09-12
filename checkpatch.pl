@@ -4972,6 +4972,7 @@ sub process {
 				"strncpy"		=> "strlcpy",
 				"strcat"		=> "strlcat",
 				"strncat"		=> "strlcat",
+				"strerror"		=> "tt_strerror",
 			);
 			if (exists($func_list{$func})) {
 				my $new = $func_list{$func};
