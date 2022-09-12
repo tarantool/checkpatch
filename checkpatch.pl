@@ -3948,7 +3948,9 @@ sub process {
 					 $op eq '*' or $op eq '/' or
 					 $op eq '%')
 				{
-					if (defined $elements[$n + 2] && $ctx !~ /[EW]x[EW]/) {
+					if (defined $elements[$n + 2] && $ctx !~ /[EW]x[EW]/ &&
+					    # Ignore floating point constants such as 1e-5 or 3.14e+10.
+					    !($op =~ /[+-]/ && $elements[$n] =~ /^\s*[0-9\.]*[eE]$/)) {
 						ERROR("SPACING",
 						      "spaces needed around that '$op' $at\n" . $hereptr);
 					} elsif (!defined $elements[$n + 2] && $ctx !~ /Wx[OE]/) {
