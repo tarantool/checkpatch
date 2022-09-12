@@ -4838,7 +4838,8 @@ sub process {
 		}
 
 # check for function declarations that have arguments without identifier names
-		if (defined $stat &&
+# suppress the check for expressions in function context to avoid FP error for class object definition
+		if (defined $stat && !defined $context_function &&
 		    $stat =~ /^.\s*(?:extern\s+)?$Type\s*(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*\(\s*([^{]+)\s*\)\s*;/s &&
 		    $1 ne "void") {
 			my $args = trim($1);
