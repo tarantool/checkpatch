@@ -654,63 +654,6 @@ foreach my $entry (@mode_permission_funcs) {
 }
 $mode_perms_search = "(?:${mode_perms_search})";
 
-our %mode_permission_string_types = (
-	"S_IRWXU" => 0700,
-	"S_IRUSR" => 0400,
-	"S_IWUSR" => 0200,
-	"S_IXUSR" => 0100,
-	"S_IRWXG" => 0070,
-	"S_IRGRP" => 0040,
-	"S_IWGRP" => 0020,
-	"S_IXGRP" => 0010,
-	"S_IRWXO" => 0007,
-	"S_IROTH" => 0004,
-	"S_IWOTH" => 0002,
-	"S_IXOTH" => 0001,
-	"S_IRWXUGO" => 0777,
-	"S_IRUGO" => 0444,
-	"S_IWUGO" => 0222,
-	"S_IXUGO" => 0111,
-);
-
-#Create a search pattern for all these strings to speed up a loop below
-our $mode_perms_string_search = "";
-foreach my $entry (keys %mode_permission_string_types) {
-	$mode_perms_string_search .= '|' if ($mode_perms_string_search ne "");
-	$mode_perms_string_search .= $entry;
-}
-our $single_mode_perms_string_search = "(?:${mode_perms_string_search})";
-our $multi_mode_perms_string_search = qr{
-	${single_mode_perms_string_search}
-	(?:\s*\|\s*${single_mode_perms_string_search})*
-}x;
-
-sub perms_to_octal {
-	my ($string) = @_;
-
-	return trim($string) if ($string =~ /^\s*0[0-7]{3,3}\s*$/);
-
-	my $val = "";
-	my $oval = "";
-	my $to = 0;
-	my $curpos = 0;
-	my $lastpos = 0;
-	while ($string =~ /\b(($single_mode_perms_string_search)\b(?:\s*\|\s*)?\s*)/g) {
-		$curpos = pos($string);
-		my $match = $2;
-		my $omatch = $1;
-		last if ($lastpos > 0 && ($curpos - length($omatch) != $lastpos));
-		$lastpos = $curpos;
-		$to |= $mode_permission_string_types{$match};
-		$val .= '\s*\|\s*' if ($val ne "");
-		$val .= $match;
-		$oval .= $omatch;
-	}
-	$oval =~ s/^\s*\|\s*//;
-	$oval =~ s/\s*\|\s*$//;
-	return sprintf("%04o", $to);
-}
-
 # Load common spelling mistakes and build regular expression list.
 my $misspellings;
 my %spelling_fix;
@@ -5091,14 +5034,6 @@ sub process {
 					}
 				}
 			}
-		}
-
-# check for uses of S_<PERMS> that could be octal for readability
-		while ($line =~ m{\b($multi_mode_perms_string_search)\b}g) {
-			my $oval = $1;
-			my $octal = perms_to_octal($oval);
-			ERROR("SYMBOLIC_PERMS",
-			      "Symbolic permissions '$oval' are not preferred. Consider using octal permissions '$octal'.\n" . $herecurr);
 		}
 	}
 
