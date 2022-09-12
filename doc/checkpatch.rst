@@ -442,6 +442,10 @@ Macros, Attributes and Symbols
   **DO_WHILE_MACRO_WITH_TRAILING_SEMICOLON**
     do {} while(0) macros should not have a trailing semicolon.
 
+  **INCLUDE_GUARD**
+    In new header files ``#pragma once`` should be used instead of
+    include guard macros.
+
   **INLINE_LOCATION**
     The inline keyword should sit between storage class and type.
 

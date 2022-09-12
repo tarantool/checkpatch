@@ -2789,6 +2789,11 @@ sub process {
 
 		$is_test = ($realfile =~ /^(?:test|perf)\//);
 
+		if ($line =~ /^\+\s*#\s*ifndef\s+[A-Z0-9_]+(?:_H|_INCLUDED)\s*$/) {
+			ERROR("INCLUDE_GUARD",
+			      "Please use '#pragma once' instead of include guard macro\n" . $herecurr);
+		}
+
 # line length limit (with some exclusions)
 #
 # There are a few types of lines that may extend beyond $max_line_length:
