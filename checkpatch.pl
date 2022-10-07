@@ -2693,7 +2693,7 @@ sub process {
 				my $second = $2;
 				my $start_pos = $-[1];
 				my $end_pos = $+[2];
-				if ($first =~ /(?:struct|union|enum)/) {
+				if ($first =~ /(?:class|struct|union|enum)/) {
 					pos($rawline) += length($first) + length($second) + 1;
 					next;
 				}
@@ -2704,6 +2704,10 @@ sub process {
 				# Ignore Doxygen-style comments like
 				# @param request Request to process
 				next if $rawline =~ /^\+\s\*\s+[\@\\]param(?:\[[a-z,]*\])*\s+$first $second/;
+
+				# Ignore variable declarations.
+				next if $realfile =~ /.h|c|cc|proto$/ &&
+					$rawline =~ /^\+\s*(?:(?:$Storage|$Modifier|optional|required|repeated)\s+)*$first\s+$second\s*[=;]/;
 
 				# check for character before and after the word matches
 				my $start_char = '';
