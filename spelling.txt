@@ -2,6 +2,8 @@
 # removed, and various additions have been made as they've been discovered
 # in the kernel source.
 #
+# Tarantool authors added a few common mistakes in this checkpatch fork.
+#
 # License: GPLv2
 #
 # The format of each line is:
@@ -1619,6 +1621,7 @@ withing||within
 wnat||want
 wont||won't
 workarould||workaround
+writeable||writable
 writeing||writing
 writting||writing
 wtih||with
