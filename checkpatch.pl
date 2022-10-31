@@ -4922,6 +4922,7 @@ sub process {
 		if ($line =~ /\b($Ident)\s*\(/) {
 			my $func = $1;
 			my %func_list = (
+				"getenv"		=> "getenv_safe",
 				"sprintf"		=> "snprintf",
 				"vsprintf"		=> "vsnprintf",
 				"strcpy"		=> "strlcpy",
