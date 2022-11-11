@@ -4287,7 +4287,7 @@ sub process {
 			my $stmt_cnt = statement_rawlines($ctx);
 			my $herectx = get_stat_here($linenr, $stmt_cnt, $here);
 
-			if ($dstat ne '' &&
+			if (!$is_test && $dstat ne '' &&
 			    !($dstat =~ /,/ && $dstat !~ /;/) &&			# comma-separated list used as array initializer
 			    $dstat !~ /^(?:$Ident|-?$Constant),$/ &&			# 10, // foo(),
 			    $dstat !~ /^(?:$Ident|-?$Constant);$/ &&			# foo();
@@ -4353,7 +4353,7 @@ sub process {
 
 # check for macros with flow control, but without ## concatenation
 # ## concatenation is commonly a macro that defines a function so ignore those
-			if ($has_flow_statement && !$has_arg_concat) {
+			if (!$is_test && $has_flow_statement && !$has_arg_concat) {
 				my $cnt = statement_rawlines($ctx);
 				my $herectx = get_stat_here($linenr, $cnt, $here);
 
