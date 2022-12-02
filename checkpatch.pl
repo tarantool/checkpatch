@@ -2785,18 +2785,13 @@ sub process {
 			      "Please avoid new tests with .result files\n");
 		}
 
-# check we are in a valid C source file if not then ignore this hunk
-		next if ($realfile !~ /\.(h|c|cc)$/);
+# check we are in a valid source file if not then ignore this hunk
+		next if ($realfile !~ /\.(h|c|cc|lua)$/);
 
-# ignore C source files outside the source and test directories when checking patches
+# ignore source files outside the source and test directories when checking patches
 		next if !$file and ($realfile !~ /^(?:src|test|perf)\// || $realfile =~ /^$skipSrcPaths/);
 
 		$is_test = ($realfile =~ /^(?:test|perf)\//);
-
-		if ($line =~ /^\+\s*#\s*ifndef\s+[A-Z0-9_]+(?:_H|_INCLUDED)\s*$/) {
-			ERROR("INCLUDE_GUARD",
-			      "Please use '#pragma once' instead of include guard macro\n" . $herecurr);
-		}
 
 # line length limit (with some exclusions)
 #
@@ -2869,6 +2864,15 @@ sub process {
 				ERROR($msg_type,
 				      "line length of $length exceeds $max_line_length columns\n" . $herecurr);
 			}
+		}
+
+# check we are in a valid C source file if not then ignore this hunk
+		next if ($realfile !~ /\.(h|c|cc)$/);
+
+# require pragma instead of include guards
+		if ($line =~ /^\+\s*#\s*ifndef\s+[A-Z0-9_]+(?:_H|_INCLUDED)\s*$/) {
+			ERROR("INCLUDE_GUARD",
+			      "Please use '#pragma once' instead of include guard macro\n" . $herecurr);
 		}
 
 # at the beginning of a line any tabs must come first and anything
