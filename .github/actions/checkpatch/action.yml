@@ -11,5 +11,6 @@ runs:
       with:
         repository: tarantool/checkpatch
         path: 'checkpatch'
-    - run: checkpatch/checkpatch.pl --color=always --show-types --git ${{ inputs.revision-range }}
+    - run: apt install -y codespell
+    - run: checkpatch/checkpatch.pl --codespell --color=always --show-types --git ${{ inputs.revision-range }}
       shell: bash
