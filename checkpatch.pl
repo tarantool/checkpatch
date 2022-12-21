@@ -2786,7 +2786,7 @@ sub process {
 		}
 
 # check we are in a valid source file if not then ignore this hunk
-		next if ($realfile !~ /\.(h|c|cc|lua)$/);
+		next if ($realfile !~ /\.(h|c|cc|lua)$/ || $realfile =~ /\.test\.lua$/);
 
 # ignore source files outside the source and test directories when checking patches
 		next if !$file and ($realfile !~ /^(?:src|test|perf)\// || $realfile =~ /^$skipSrcPaths/);
