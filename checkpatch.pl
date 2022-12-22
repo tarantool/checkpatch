@@ -2914,7 +2914,7 @@ sub process {
 		}
 
 # check multi-line statement indentation matches previous line
-		if ($prevline =~ /^\+([ \t]*)((?:$c90_Keywords(?:\s+if)\s*)|(?:$Declare\s*)?(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*|(?:(?:\*\s*)*$Lval|$Declare\s*$Ident)\s*=\s*$Ident\s*)\(.*(\&\&|\|\||,)\s*$/) {
+		if ($prevline =~ /^\+([ \t]*)((?:$c90_Keywords(?:\s+if)\s*)|(?:$Declare\s*)?(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*|(?:(?:\*\s*)*$Lval|$Declare\s*$Ident)\s*=\s*$Ident\s*)\(.*(\&\&|\|\||,|")\s*$/) {
 			$prevline =~ /^\+(\t*)(.*)$/;
 			my $oldindent = $1;
 			my $rest = $2;
