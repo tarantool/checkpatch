@@ -2640,8 +2640,11 @@ sub process {
 # Check for various typo / spelling mistakes
 		if (defined($misspellings) &&
 		    ($in_commit_log || $line =~ /^(?:\+|Subject:)/i)) {
-			while ($rawline =~ /(?:^|[^\w\-'`])($misspellings)(?:[^\w\-'`]|$)/gi) {
-				my $typo = $1;
+			while ($rawline =~ /(^|[^\w\-'`])($misspellings)(?:[^\w\-'`]|$)/gi) {
+				my $prev = $1;
+				my $typo = $2;
+				# Ignore anything that looks like regular expression.
+				next if $prev =~ /[.|]/;
 				# Ignore ALL UPPER CASE words as it may be an abbreviation,
 				# e.g. TAHT - Tahiti Time
 				next if ($typo eq uc($typo));
