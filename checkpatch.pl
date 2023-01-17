@@ -2643,8 +2643,8 @@ sub process {
 			while ($rawline =~ /(^|[^\w\-'`])($misspellings)(?:[^\w\-'`]|$)/gi) {
 				my $prev = $1;
 				my $typo = $2;
-				# Ignore anything that looks like regular expression.
-				next if $prev =~ /[.|]/;
+				# Ignore anything that looks like regular expression or file path.
+				next if $prev =~ /[.|\/]/;
 				# Ignore ALL UPPER CASE words as it may be an abbreviation,
 				# e.g. TAHT - Tahiti Time
 				next if ($typo eq uc($typo));
