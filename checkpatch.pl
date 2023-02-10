@@ -2712,6 +2712,9 @@ sub process {
 				next if $realfile =~ /.h|c|cc|proto$/ &&
 					$rawline =~ /^\+\s*(?:(?:$Storage|$Modifier|optional|required|repeated)\s+)*$first\s+$second\s*[=;]/;
 
+				# Ignore 'not not' in Lua.
+				next if $realfile =~ /\.lua$/ && $first eq 'not';
+
 				# check for character before and after the word matches
 				my $start_char = '';
 				my $end_char = '';
