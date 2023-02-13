@@ -2643,6 +2643,8 @@ sub process {
 			while ($rawline =~ /(^|[^\w\-'`])($misspellings)(?:[^\w\-'`]|$)/gi) {
 				my $prev = $1;
 				my $typo = $2;
+				# Ignore if this is a patch file and the line is removed or unchanged.
+				next if $realfile =~ /\.patch$/ && $rawline !~ /^\+\+/;
 				# Ignore anything that looks like regular expression or file path.
 				next if $prev =~ /[.|\/]/;
 				# Ignore ALL UPPER CASE words as it may be an abbreviation,
