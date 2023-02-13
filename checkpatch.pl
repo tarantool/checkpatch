@@ -2770,7 +2770,7 @@ sub process {
 		}
 
 # check for space before tabs.
-		if ($rawline =~ /^\+/ && $rawline =~ / \t/) {
+		if ($realfile !~ /\.patch$/ && $rawline =~ /^\+/ && $rawline =~ / \t/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";
 			ERROR("SPACE_BEFORE_TAB",
 			      "please, no space before tabs\n" . $herevet);
