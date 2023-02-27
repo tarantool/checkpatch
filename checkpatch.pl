@@ -3594,8 +3594,8 @@ sub process {
 		}
 
 # check that function name and return value type are placed on different lines
-		if ($realfile =~ /\bbox\.h$/ && $line =~ /^\+\s*$Declare\s*box_set_/) {
-			# ignore box_set_XXX in box.h
+		if ($line =~ /^\+\s*$Declare\s*(?:box_set_|generic_)/) {
+			# ignore box_set_XXX and generic_XXX
 		} elsif ($line =~ /^\+(?:typedef\s+)?$Declare\s*(?:$Ident|\(\s*\*\s*$Ident\s*\))\s*\(/) {
 			ERROR("FUNCTION_NAME_NO_NEWLINE",
 			      "Function name and return value type should be placed on different lines\n" . $herecurr)
