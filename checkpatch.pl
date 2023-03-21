@@ -4941,7 +4941,7 @@ sub process {
 		}
 
 # warn about unsafe functions
-		if ($line =~ /\b($Ident)\s*\(/) {
+		if (!$is_test && $line =~ /\b($Ident)\s*\(/) {
 			my $func = $1;
 			my %func_list = (
 				"getenv"		=> "getenv_safe",
