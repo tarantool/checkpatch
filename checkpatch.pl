@@ -2483,13 +2483,6 @@ sub process {
 			}
 		}
 
-# Check email subject for common tools that don't need to be mentioned
-		if ($in_header_lines &&
-		    $line =~ /^Subject:.*\b(?:checkpatch|sparse|smatch)\b[^:]/i) {
-			ERROR("EMAIL_SUBJECT",
-			      "A patch subject line should describe the change not the tool that found it\n" . $herecurr);
-		}
-
 # Check for Gerrit Change-Ids not in any patch context
 		if ($realfile eq '' && !$has_patch_separator && $line =~ /^\s*change-id:/i) {
 			ERROR("GERRIT_CHANGE_ID",

@@ -94,7 +94,7 @@ Available options:
 
    Example::
 
-     ./scripts/checkpatch.pl mypatch.patch --types EMAIL_SUBJECT,BRACES
+     ./scripts/checkpatch.pl mypatch.patch --types LINE_SPACING,BRACES
 
  - --ignore TYPE(,TYPE2...)
 
@@ -102,7 +102,7 @@ Available options:
 
    Example::
 
-     ./scripts/checkpatch.pl mypatch.patch --ignore EMAIL_SUBJECT,BRACES
+     ./scripts/checkpatch.pl mypatch.patch --ignore LINE_SPACING,BRACES
 
  - --show-types
 
@@ -245,11 +245,6 @@ Commit message
   **COMMIT_MESSAGE**
     The patch is missing a commit description.  A brief
     description of the changes made by the patch should be added.
-
-  **EMAIL_SUBJECT**
-    Naming the tool that found the issue is not very useful in the
-    subject line.  A good subject line summarizes the change that
-    the patch brings.
 
   **FROM_SIGN_OFF_MISMATCH**
     The author's email does not match with that in the Signed-off-by:
