@@ -4357,10 +4357,11 @@ sub process {
 				$tmp_stmt =~ s/\#+\s*$arg\b//g;
 				$tmp_stmt =~ s/\b$arg\s*\#\#//g;
 # check if any macro arguments may have other precedence issues
-				if ($tmp_stmt =~ m/($Operators)?\s*\b$arg\b\s*($Operators)?/m &&
-				    ((defined($1) && $1 ne ',') ||
-				     (defined($2) && $2 ne ',')) &&
-				    !(defined($1) && ($1 eq '->' || $1 eq '.'))) {
+				if ($tmp_stmt =~ m/(\()?\s*($Operators)?\s*\b$arg\b\s*($Operators)?[\s\*]*(\))?/m &&
+				    ((defined($2) && $2 ne ',') ||
+				     (defined($3) && $3 ne ',')) &&
+				    !(defined($2) && ($2 eq '->' || $2 eq '.')) &&
+				    !(defined($1) && !defined($2) && (!defined($3) || $3 eq '*') && defined($4))) {
 					ERROR("MACRO_ARG_PRECEDENCE",
 					      "Macro argument '$arg' may be better as '($arg)' to avoid precedence issues\n" . "$herectx");
 				}
