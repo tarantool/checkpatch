@@ -2648,6 +2648,10 @@ sub process {
 				my $hereptr = "$hereline$ptr\n";
 				my $typo_fix = $spelling_fix{lc($typo)};
 				$typo_fix = ucfirst($typo_fix) if ($typo =~ /^[A-Z]/);
+				# Ignore CamelCase.
+				my $typo_fix_camel_case = $typo_fix;
+				$typo_fix_camel_case =~ s/ (\w)/\U$1/g;
+				next if ($typo eq $typo_fix_camel_case);
 				$typo_fix = uc($typo_fix) if ($typo =~ /^[A-Z]+$/);
 				# Ignore the case when we drop a character to use a misspelled word as function name, e.g. isnt().
 				next if ($realfile =~ /\.h|c|cc|lua$/ && $typo_fix =~ /[^a-zA-Z_]/ && $line =~ /\b$typo\s*\(/);
