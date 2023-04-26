@@ -4385,6 +4385,7 @@ sub process {
 
 		} else {
 			if ($prevline !~ /^..*\\$/ &&
+			    $rawline !~ /^\+\s*\*\/\s*\\$/ &&	# multiline comment
 			    $line !~ /^\+\s*\#.*\\$/ &&		# preprocessor
 			    $line !~ /^\+.*\b(__asm__|asm)\b.*\\$/ &&	# asm
 			    $line =~ /^\+.*\\$/) {
