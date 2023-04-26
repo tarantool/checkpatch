@@ -4685,6 +4685,8 @@ sub process {
 			}
 			if (!defined($decl)) {
 				# not a declaration
+			} elsif (!$is_func && $decl =~ /\bstruct\s+trigger\b/) {
+				# ignore trigger declarations because we usually add a comment to a trigger function instead
 			} elsif (!$is_func && defined($context_function)) {
 				# ignore local variables
 			} elsif ($realfile !~ /\.h$/ && $decl !~ /\bstatic\b/ && !defined($context_struct)) {
