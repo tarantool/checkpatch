@@ -4096,6 +4096,12 @@ sub process {
 			}
 		}
 
+# check for a closing parenthesis on a separate line
+		if ($line =~ /^\+\s*\)\s*[;{]?\s*$/) {
+			ERROR("DANGLING_PARENTHESIS",
+			      "Closing parenthesis should follow function argument or operand\n" . $herecurr);
+		}
+
 # comparisons with a constant or upper case identifier on the left
 #	avoid cases like "foo + BAR < baz"
 #	only fix matches surrounded by parentheses to avoid incorrect

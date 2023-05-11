@@ -642,6 +642,10 @@ Spacing and Brackets
 
       printk(KERN_INFO "bar");
 
+  **DANGLING_PARENTHESIS**
+    A closing parenthesis should never be placed on a separate line. It should
+    always follow a function argument or an operand.
+
   **ELSE_AFTER_BRACE**
     `else {` should follow the closing block `}` on the same line.
 
