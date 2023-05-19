@@ -2768,6 +2768,15 @@ sub process {
 			      "adding a line without newline at end of file\n" . $herecurr);
 		}
 
+# Ban non-ASCII characters in text files
+		if ($rawline =~ /^\+.*($NON_ASCII_UTF8)/) {
+			my $blank = copy_spacing($rawline);
+			my $ptr = substr($blank, 0, $-[1]) . "^";
+			my $hereptr = "$hereline$ptr\n";
+			ERROR("NON_ASCII_CHAR",
+			      "please, don't use non-ASCII characters\n" . $hereptr);
+		}
+
 # check for space before tabs.
 		if ($realfile !~ /\.patch$/ && $rawline =~ /^\+/ && $rawline =~ / \t/) {
 			my $herevet = "$here\n" . cat_vet($rawline) . "\n";

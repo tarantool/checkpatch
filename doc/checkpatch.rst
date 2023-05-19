@@ -740,6 +740,11 @@ Others
     The memset use appears to be incorrect.  This may be caused due to
     badly ordered parameters.  Please recheck the usage.
 
+  **NON_ASCII_CHAR**
+    Non-ASCII characters should be avoided because they may complicate
+    grepping. For example, Russian 'С' looks exactly like English 'C'
+    but grep doesn't find it.
+
   **NO_CHANGELOG**
     The patch lacks a changelog.  Please add a new changelog entry to the
     changelog/unreleased directory.  If the patch doesn't need a changelog
