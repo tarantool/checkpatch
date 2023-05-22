@@ -2916,6 +2916,19 @@ sub process {
 			}
 		}
 
+# check function argument alignment after opening parenthesis
+		if ($prevrawline =~ /^.(\s*)((?:if|while|for|switch)\s*\(.*)?\b$Ident\s*\(\s*$/) {
+			my $previndent = length(expand_tabs($1));
+			my $in_cond = defined($2);
+			my $expected_tabs = ceil($previndent / $tabsize) + ($in_cond ? 2 : 1);
+			$rawline =~ /^\+(\s*)/;
+			my $indent = length(expand_tabs($1));
+			if ($indent != $expected_tabs * $tabsize) {
+				ERROR("CODE_INDENT",
+				      "bad code indent, should be $expected_tabs tabs\n" . $hereprev);
+			}
+		}
+
 # check for assignments on the start of a line
 		if ($sline =~ /^\+\s+($Assignment)[^=]/) {
 			ERROR("ASSIGNMENT_CONTINUATIONS",
