@@ -2769,9 +2769,10 @@ sub process {
 		}
 
 # Ban non-ASCII characters in text files
-		if ($rawline =~ /^\+.*($NON_ASCII_UTF8)/) {
-			my $blank = copy_spacing($rawline);
-			my $ptr = substr($blank, 0, $-[1]) . "^";
+		if ($rawline =~ /^\+.*$NON_ASCII_UTF8/) {
+			my $l = $rawline;
+			$l =~ s/$NON_ASCII_UTF8.*//;
+			my $ptr = copy_spacing($l) . "^";
 			my $hereptr = "$hereline$ptr\n";
 			ERROR("NON_ASCII_CHAR",
 			      "please, don't use non-ASCII characters\n" . $hereptr);
