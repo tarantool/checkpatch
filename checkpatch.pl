@@ -2684,6 +2684,8 @@ sub process {
 			$has_test = 1;
 		}
 
+		$is_test = ($realfile =~ /^(?:test|perf)\//);
+
 # check for repeated words separated by a single space
 # avoid false positive from list command eg, '-rw-r--r-- 1 root root'
 		if (($rawline =~ /^\+/ || $in_commit_log) &&
@@ -2768,8 +2770,8 @@ sub process {
 			      "adding a line without newline at end of file\n" . $herecurr);
 		}
 
-# Ban non-ASCII characters in text files
-		if ($rawline =~ /^\+.*$NON_ASCII_UTF8/) {
+# Ban non-ASCII characters in text files other than tests
+		if (!$is_test && $rawline =~ /^\+.*$NON_ASCII_UTF8/) {
 			my $l = $rawline;
 			$l =~ s/$NON_ASCII_UTF8.*//;
 			my $ptr = copy_spacing($l) . "^";
@@ -2805,8 +2807,6 @@ sub process {
 
 # ignore source files outside the source and test directories when checking patches
 		next if !$file and ($realfile !~ /^(?:src|test|perf)\// || $realfile =~ /^$skipSrcPaths/);
-
-		$is_test = ($realfile =~ /^(?:test|perf)\//);
 
 # line length limit (with some exclusions)
 #
