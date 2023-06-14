@@ -2921,11 +2921,12 @@ sub process {
 			my $previndent = length(expand_tabs($1));
 			my $in_cond = defined($2);
 			my $expected_tabs = ceil($previndent / $tabsize) + ($in_cond ? 2 : 1);
-			$rawline =~ /^\+(\s*)/;
-			my $indent = length(expand_tabs($1));
-			if ($indent != $expected_tabs * $tabsize) {
-				ERROR("CODE_INDENT",
-				      "bad code indent, should be $expected_tabs tabs\n" . $hereprev);
+			if ($rawline =~ /^\+(\s*)/) {
+				my $indent = length(expand_tabs($1));
+				if ($indent != $expected_tabs * $tabsize) {
+					ERROR("CODE_INDENT",
+					      "bad code indent, should be $expected_tabs tabs\n" . $hereprev);
+				}
 			}
 		}
 
