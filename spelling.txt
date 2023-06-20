@@ -131,6 +131,7 @@ an one||a one
 analysator||analyzer
 ang||and
 anniversery||anniversary
+annotatoin||annotation
 annoucement||announcement
 anomolies||anomalies
 anomoly||anomaly
