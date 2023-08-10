@@ -4134,7 +4134,7 @@ sub process {
 			my $lead = $1;
 			my $to = $2;
 			if ($lead !~ /(?:$Operators|\.)\s*$/ &&
-			    $to !~ /^(?:Constant|[A-Z_][A-Z0-9_]*)$/) {
+			    $to !~ /^(?:$Constant|[A-Z_][A-Z0-9_]*)\s*$/) {
 				ERROR("CONSTANT_COMPARISON",
 				      "Comparisons should place the constant on the right side of the test\n" . $herecurr);
 			}
