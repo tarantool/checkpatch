@@ -388,6 +388,7 @@ our $Attribute	= qr{
 			MAYBE_UNUSED|
 			NODISCARD|
 			NORETURN|
+			NO_SANITIZE_ADDRESS|
 			PACKED
 		  }x;
 our $Modifier;
@@ -4793,6 +4794,7 @@ sub process {
 				"nodiscard"			=> "NODISCARD",
 				"noinline"			=> "NOINLINE",
 				"noreturn"			=> "NORETURN",
+				"no_sanitize_address"		=> "NO_SANITIZE_ADDRESS",
 				"packed"			=> "PACKED",
 				"unused"			=> "MAYBE_UNUSED"
 			);
