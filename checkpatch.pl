@@ -4546,7 +4546,7 @@ sub process {
 
 # no volatiles please
 		my $asm_volatile = qr{\b(__asm__|asm)\s+(__volatile__|volatile)\b};
-		if ($line =~ /\bvolatile\b/ && $line !~ /$asm_volatile/ && $line !~ /\bsig_atomic_t\b/) {
+		if (!$is_test && $line =~ /\bvolatile\b/ && $line !~ /$asm_volatile/ && $line !~ /\bsig_atomic_t\b/) {
 			ERROR("VOLATILE",
 			      "Use of volatile is usually wrong\n" . $herecurr);
 		}
