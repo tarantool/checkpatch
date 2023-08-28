@@ -2070,6 +2070,7 @@ sub process {
 	my $here = '';
 	my $context_function;		#undef'd unless there's a known function
 	my $context_struct;		#undef'd unless there's a known struct
+	my $in_template_indent;		#nddef'd unless in template arguments
 	my $in_comment = 0;
 	my $first_line = 0;
 	my %check_comment_ignore = ();
@@ -2206,6 +2207,7 @@ sub process {
 			} else {
 				undef $context_struct;
 			}
+			undef $in_template_indent;
 			next;
 
 # track the line number as we move through the hunk, note that
@@ -2944,11 +2946,33 @@ sub process {
 		}
 
 # check indentation starts on a tab stop
-		if ($sline =~ /^\+\t+( +)(?:$c90_Keywords\b|\{\s*$|\}\s*(?:else\b|while\b|\s*$)|$Declare\s*$Ident\s*[;=])/) {
+		if (!defined($in_template_indent) && $sline =~ /^\+\t+( +)(?:$c90_Keywords\b|\{\s*$|\}\s*(?:else\b|while\b|\s*$)|$Declare\s*$Ident\s*[;=])/) {
 			my $indent = length($1);
 			if ($indent % $tabsize) {
 				ERROR("TABSTOP",
 				      "Statements should start on a tabstop\n" . $herecurr);
+			}
+		}
+
+# check template arguments alignment
+		if (defined($in_template_indent)) {
+			if ($rawline =~ /^\+(\s*)/) {
+				my $indent = length(expand_tabs($1));
+				if ($indent != $in_template_indent) {
+					ERROR("CODE_INDENT",
+					      "unaligned template arguments\n" . $hereprev);
+				}
+			}
+			if ($rawline =~ />\s*$/) {
+				undef $in_template_indent;
+			}
+		} elsif ($rawline =~ /^.(\s*)template(\s*)</) {
+			if (length($2) > 0) {
+				ERROR("SPACING",
+				      "space prohibited between 'template' and '<'\n" . $herecurr);
+			}
+			if ($rawline !~ />\s*$/) {
+				$in_template_indent = length(expand_tabs($1)) + length('template<');
 			}
 		}
 
