@@ -2264,7 +2264,7 @@ sub process {
 		if ($line =~ /^new (file )?mode.*[7531]\d{0,2}$/) {
 			$has_exec_perm = 1
 		}
-		if ($realline == 1 and ($line =~ /^\+#!/) != $has_exec_perm) {
+		if ($realline == 1 and ($rawline =~ /^\+#!/) != $has_exec_perm) {
 			my $permhere = $here . "FILE: $realfile\n";
 			my $msg = ($has_exec_perm ?
 				   "Executable file must have hashbang (#!)" :
