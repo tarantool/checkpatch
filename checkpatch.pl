@@ -1583,7 +1583,9 @@ sub get_stat_real {
 
 	my $stat_real = raw_line($linenr, 0);
 	for (my $count = $linenr + 1; $count <= $lc; $count++) {
-		$stat_real = $stat_real . "\n" . raw_line($count, 0);
+		my $rl = raw_line($count, 0);
+		last if !defined($rl);
+		$stat_real = $stat_real . "\n" . $rl;
 	}
 
 	return $stat_real;
@@ -1594,7 +1596,9 @@ sub get_stat_here {
 
 	my $herectx = $here . "\n";
 	for (my $n = 0; $n < $cnt; $n++) {
-		$herectx .= raw_line($linenr, $n) . "\n";
+		my $rl = raw_line($linenr, $n);
+		last if !defined($rl);
+		$herectx .= $rl . "\n";
 	}
 
 	return $herectx;
@@ -4730,6 +4734,7 @@ sub process {
 				my $cnt = statement_rawlines($stat);
 				for (my $n = 0; $n < $cnt; $n++) {
 					my $rl = raw_line($linenr, $n);
+					last if !defined($rl);
 					if (!defined($func_body_size)) {
 						$func_body_size = -1 if $rl =~ /\{/;
 						next;
@@ -4952,6 +4957,7 @@ sub process {
 			my $herectx = $here . "\n";
 			for (my $n = 0; $n < $cnt; $n++) {
 				my $rl = raw_line($linenr, $n);
+				last if !defined($rl);
 				$herectx .=  $rl . "\n";
 				$ok = 1 if ($rl =~ /^[ \+]\s*\{/);
 				# allow opening and closing braces on the same line
