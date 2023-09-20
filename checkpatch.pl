@@ -4712,6 +4712,8 @@ sub process {
 			# operator() is used as a callback so a comment isn't necessary
 		} elsif ($line =~ /^\+\s*(?:$Declare)?\s*(?:generic_|disabled_|exhausted_)/) {
 			# generic_XXX, disabled_XXX, exhausted_XXX are functions are stubs so comments are not required
+		} elsif ($prevline =~ /[,(]\s*$/) {
+			# function argument list
 		} elsif ($line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
 			# function, function pointer, variable / struct member
 			my $decl = $1;
