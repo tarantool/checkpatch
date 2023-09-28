@@ -3592,8 +3592,8 @@ sub process {
 			      "const array should probably be static const\n" . $herecurr);
 		}
 
-# check for static char foo[] = "bar" declarations.
-		if ($line =~ /\bstatic\s+char\s+(\w+)\s*\[\s*\]\s*=\s*"/) {
+# check for static char foo[] = "bar" declarations; ignore mkdtemp template
+		if ($line =~ /\bstatic\s+char\s+(\w+)\s*\[\s*\]\s*=\s*"/ && $line !~ /XXXXXX/) {
 			ERROR("STATIC_CONST_CHAR_ARRAY",
 			      "static char array declaration should probably be static const char\n" .
 				$herecurr);
