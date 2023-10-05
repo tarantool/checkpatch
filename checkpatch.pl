@@ -2053,6 +2053,7 @@ sub process {
 	my $commit_log_lines = 0;	#Number of commit log lines
 	my $commit_log_long_line = 0;
 	my $commit_log_no_wrap = 0;
+	my $commit_log_code_section = 0;
 	my $commit_log_has_diff = 0;
 	my $non_utf8_charset = 0;
 	my $has_exec_perm = 0;		#Current file has exec permissions
@@ -2499,9 +2500,12 @@ sub process {
 		if ($in_commit_log && $line =~ /^NO_WRAP$/) {
 			$commit_log_no_wrap = !$commit_log_no_wrap;
 		}
+		if ($in_commit_log && $line =~ /^```/) {
+			$commit_log_code_section = !$commit_log_code_section;
+		}
 
 # Check for line lengths > 75 in commit log, warn once
-		if ($in_commit_log && !$commit_log_no_wrap && !$commit_log_long_line &&
+		if ($in_commit_log && !$commit_log_no_wrap && !$commit_log_code_section && !$commit_log_long_line &&
 		    length($line) > 75 &&
 		    !($line =~ /^\s*[a-zA-Z0-9_\/\.]+\s+\|\s+\d+/ ||
 					# file delta changes
@@ -5196,6 +5200,10 @@ sub process {
 		if ($commit_log_no_wrap) {
 			ERROR("UNTERMINATED_TAG",
 			      "Unterminated NO_WRAP section in commit description\n")
+		}
+		if ($commit_log_code_section) {
+			ERROR("UNTERMINTATED_CODE_SECTION",
+			      "Untermintated code section (```) in commit description\n");
 		}
 		if (!$has_doc && !exists($commit_log_tags{'NO_DOC'})) {
 			ERROR("NO_DOC",
