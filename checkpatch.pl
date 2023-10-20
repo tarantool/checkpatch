@@ -381,6 +381,7 @@ our $Attribute	= qr{
 			const|
 			volatile|
 			alignas|
+			ALWAYS_INLINE|
 			API_EXPORT|
 			CFORMAT|
 			DEPREACTED|
@@ -4823,6 +4824,7 @@ sub process {
 
 			my %attr_list = (
 				"aligned"			=> "alignas",
+				"always_inline"			=> "ALWAYS_INLINE",
 				"format"			=> "CFORMAT",
 				"deprecated"			=> "DEPREACTED",
 				"fallthrough"			=> "FALLTHROUGH",
