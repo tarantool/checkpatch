@@ -2919,10 +2919,10 @@ sub process {
 			      "code indent shouldn't use spaces if the previous line ends with $what\n" . $herevet);
 		}
 
-# alignment should match the comment on the previous line unless it's the end of a function or struct
+# alignment should match the comment on the previous line unless it's the end of block
 		if ($prevrawline =~ /^.(\s*)(?:\/\*.*| )\*\/\s*$/) {
 			my $ident = length($1);
-			if ($rawline =~ /^\+(\s*)[^\}]/ && length($1) != $ident) {
+			if ($rawline =~ /^\+(\s*)[^}\s]/ && length($1) != $ident) {
 				ERROR("CODE_IDENT",
 				      "code indent should match comment\n" . $hereprev);
 			}
