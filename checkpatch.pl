@@ -2871,8 +2871,8 @@ sub process {
 			} elsif ($line =~ /^\+.*\\$/ && $length == $max_line_length + 1) {
 				$msg_type = "";
 			# Comment which is used as a header in array initializer
-			# /* FOO  BAR  BAZ */
-			} elsif ($rawline =~ /^.\s*\/\*[a-zA-Z_\s]+\*\/\s*$/) {
+			# /* FOO  BAR  12  34 */
+			} elsif ($rawline =~ /^.\s*\/\*[0-9a-zA-Z_\s]+\*\/\s*$/) {
 				$msg_type = "";
 
 			# Otherwise set the alternate message types
