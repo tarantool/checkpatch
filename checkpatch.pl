@@ -2978,7 +2978,7 @@ sub process {
 			if ($rawline =~ />\s*$/) {
 				undef $in_template_indent;
 			}
-		} elsif ($rawline =~ /^.(\s*)template(\s*)</) {
+		} elsif ($rawline =~ /^\+(\s*)template(\s*)</) {
 			if (length($2) > 0) {
 				ERROR("SPACING",
 				      "space prohibited between 'template' and '<'\n" . $herecurr);
