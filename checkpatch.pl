@@ -4722,7 +4722,7 @@ sub process {
 			# generic_XXX, disabled_XXX, exhausted_XXX are functions are stubs so comments are not required
 		} elsif ($prevline =~ /[,(]\s*$/) {
 			# function argument list
-		} elsif ($line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)/) {
+		} elsif ($line =~ /^\+\s*($Declare)?\s*(?:($Ident)\s*\(|\(\s*\*\s*($Ident)\s*\)\s*\(|($Ident)\s*;)\s*$/) {
 			# function, function pointer, variable / struct member
 			my $decl = $1;
 			my $is_func = defined($2);
