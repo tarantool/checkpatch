@@ -4421,8 +4421,9 @@ sub process {
 
 # check if any macro arguments are reused (ignore '...' and 'type')
 			foreach my $arg (@def_args) {
-			        next if ($arg =~ /\.\.\./);
-			        next if ($arg =~ /^type$/i);
+			        next if ($arg =~ /\.\.\./);              # Skip the ellipsis.
+			        next if ($arg =~ /^type$/i);             # Skip the argument with a special name.
+			        next if ($define_stmt =~ /\b$arg\s*::/); # Skip the argument if it's used as a scope name (it's a class or a namespace name).
 				my $tmp_stmt = $define_stmt;
 				$tmp_stmt =~ s/\b(__must_be_array|offsetof|sizeof|sizeof_field|__stringify|typeof|__typeof__|__builtin\w+|typecheck\s*\(\s*$Type\s*,|\#+)\s*\(*\s*$arg\s*\)*\b//g;
 				$tmp_stmt =~ s/\#+\s*$arg\b//g;
