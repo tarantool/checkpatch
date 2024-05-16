@@ -3923,7 +3923,7 @@ sub process {
 						ERROR("SPACING",
 						      "space prohibited before that '$op' $at\n" . $hereptr);
 					}
-					if ($ctx !~ /.x[WEC]/ && $cc !~ /^}/) {
+					if ($ctx !~ /.x[WECB]/ && $cc !~ /^}/) {
 						ERROR("SPACING",
 						      "space required after that '$op' $at\n" . $hereptr);
 					}
