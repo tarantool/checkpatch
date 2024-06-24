@@ -2986,7 +2986,7 @@ sub process {
 				ERROR("SPACING",
 				      "space prohibited between 'template' and '<'\n" . $herecurr);
 			}
-			if ($rawline !~ />\s*$/) {
+			if ($rawline !~ />\s*\\?$/) {
 				$in_template_indent = length(expand_tabs($1)) + length('template<');
 			}
 		}
