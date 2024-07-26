@@ -455,6 +455,8 @@ our $skipSrcPaths = qr{(?x:
 	src\/lib\/tzcode\/
 )};
 
+our $generatedFiles;
+
 our $typeMacros = qr{(?x:
 	LIGHT
 )};
@@ -888,6 +890,26 @@ if ($git) {
 	}
 	die "$P: no git commits after extraction!\n" if (@commits == 0);
 	@ARGV = @commits;
+}
+
+# Collect files marked as generated in .gitattributes
+if ($git && $gitroot) {
+	if (open(my $gitattributes, '<', "$gitroot/../.gitattributes")) {
+		my @acc = ();
+		while (<$gitattributes>) {
+			my $line = $_;
+			# https://docs.github.com/en/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github
+			next if ($line !~ /linguist-generated=true/);
+			$line =~ s/ +[^ ]+$//;
+			# https://www.git-scm.com/docs/gitignore#_pattern_format
+			#
+			# Assume that the file pattern is just a file path or
+			# a directory path in the repository.
+			push(@acc, "^\Q$line\E");
+		}
+		close($gitattributes);
+		$generatedFiles = join("|", @acc);
+	}
 }
 
 my $vname;
@@ -2645,6 +2667,9 @@ sub process {
 			ERROR("UTF8_BEFORE_PATCH",
 			      "8-bit UTF-8 used in possible commit log\n" . $herecurr);
 		}
+
+# Skip files marked as generated in .gitattributes
+		next if $realfile ne '' && defined($generatedFiles) && $realfile =~ $generatedFiles;
 
 # Check for various typo / spelling mistakes
 		if (defined($misspellings) &&
