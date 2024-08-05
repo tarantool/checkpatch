@@ -2669,7 +2669,7 @@ sub process {
 		}
 
 # Skip files marked as generated in .gitattributes
-		next if $realfile ne '' && defined($generatedFiles) && $realfile =~ $generatedFiles;
+		next if $realfile ne '' && $generatedFiles ne '' && $realfile =~ $generatedFiles;
 
 # Check for various typo / spelling mistakes
 		if (defined($misspellings) &&
