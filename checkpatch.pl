@@ -455,7 +455,7 @@ our $skipSrcPaths = qr{(?x:
 	src\/lib\/tzcode\/
 )};
 
-our $generatedFiles;
+our $generatedFiles = '';
 
 our $typeMacros = qr{(?x:
 	LIGHT
