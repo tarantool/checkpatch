@@ -15,6 +15,7 @@ use File::Basename;
 use Cwd 'abs_path';
 use Term::ANSIColor qw(:constants);
 use Encode qw(decode encode);
+use File::Spec::Functions 'catfile';
 
 my $P = $0;
 my $D = dirname(abs_path($P));
@@ -894,7 +895,13 @@ if ($git) {
 
 # Collect files marked as generated in .gitattributes
 if ($git && $gitroot) {
-	if (open(my $gitattributes, '<', "$gitroot/../.gitattributes")) {
+	# $gitroot points to a .git directory/file inside a repository
+	# root. Calculate its parent directory -- the repository root.
+	#
+	# TODO: Should we handle a bare git repository somehow?
+	my $repo_root = dirname(abs_path($gitroot));
+
+	if (open(my $gitattributes, '<', catfile($repo_root, ".gitattributes"))) {
 		my @acc = ();
 		while (<$gitattributes>) {
 			my $line = $_;
