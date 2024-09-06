@@ -2721,6 +2721,10 @@ sub process {
 
 		if ($in_commit_log && $line =~ /^($custom_tags)=/) {
 			$commit_log_tags{$1} = 1;
+			if ($has_doc) {
+				ERROR("TAG_IN_DOC",
+				      "Please move $1 tag before doc request\n");
+			}
 		}
 		if ($in_commit_log && $line =~ /^\@TarantoolBot document$/) {
 			$has_doc = 1;
