@@ -448,12 +448,9 @@ our $UTF8	= qr{
 
 # Skip all checks for the following paths.
 our $skipPaths = qr{(?x:
+	src\/lib\/tzcode\/|
+	third_party\/|
 	test\/static\/corpus\/
-)};
-
-# Skip C/C++ source code checks for the following paths.
-our $skipSrcPaths = qr{(?x:
-	src\/lib\/tzcode\/
 )};
 
 our $generatedFiles = '';
@@ -2636,8 +2633,6 @@ sub process {
 				$herecurr) if (!$emitted_corrupt++);
 		}
 
-		next if !$file and $realfile =~ /^$skipPaths/;
-
 # UTF-8 regex found at http://www.w3.org/International/questions/qa-forms-utf-8.en.php
 		if (($realfile =~ /^$/ || $line =~ /^\+/) &&
 		    $rawline !~ m/^$UTF8*$/) {
@@ -2674,6 +2669,8 @@ sub process {
 			ERROR("UTF8_BEFORE_PATCH",
 			      "8-bit UTF-8 used in possible commit log\n" . $herecurr);
 		}
+
+		next if $realfile ne '' && $realfile =~ /^$skipPaths/;
 
 # Skip files marked as generated in .gitattributes
 		next if $realfile ne '' && $generatedFiles ne '' && $realfile =~ $generatedFiles;
@@ -2854,12 +2851,6 @@ sub process {
 			      "Please avoid new tests with .result files\n");
 		}
 
-# check we are in a valid source file if not then ignore this hunk
-		next if ($realfile !~ /\.(h|c|cc|lua)$/ || $realfile =~ /\.test\.lua$/);
-
-# ignore source files outside the source and test directories when checking patches
-		next if !$file and ($realfile !~ /^(?:src|test|perf)\// || $realfile =~ /^$skipSrcPaths/);
-
 # line length limit (with some exclusions)
 #
 # There are a few types of lines that may extend beyond $max_line_length:
@@ -2878,7 +2869,8 @@ sub process {
 # if LONG_LINE is ignored, the other 2 types are also ignored
 #
 
-		if ($line =~ /^\+/ && $length > $max_line_length) {
+		if ($realfile =~ /\.(h|c|cc|lua)$/ && $realfile !~ /\.test\.lua$/ &&
+		    $line =~ /^\+/ && $length > $max_line_length) {
 			my $msg_type = "LONG_LINE";
 
 			# Check the allowed long line types first
