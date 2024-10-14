@@ -2737,7 +2737,7 @@ sub process {
 
 # check for repeated words separated by a single space
 # avoid false positive from list command eg, '-rw-r--r-- 1 root root'
-		if (($rawline =~ /^\+/ || $in_commit_log) &&
+		if (($rawline =~ /^\+/ || ($in_commit_log && !$commit_log_code_section)) &&
 		    $rawline !~ /[bcCdDlMnpPs\?-][rwxsStT-]{9}/) {
 			pos($rawline) = 1 if (!$in_commit_log);
 			while ($rawline =~ /\b($word_pattern) (?=($word_pattern))/g) {
