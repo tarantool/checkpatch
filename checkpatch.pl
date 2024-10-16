@@ -598,7 +598,7 @@ our @typeList = (
 	qr{${Ident}_f},
 	qr{${Ident}_fn},
 	qr{${Ident}_cb},
-	qr{(?:::)?(?:[A-Z][a-z][A-Za-z\d]*::)*[A-Z][a-z][A-Za-z\d]*},
+	qr{(?:::)?(?:[A-Z][a-z][A-Za-z\d]*::)*[A-Z][a-z][A-Za-z\d]*(?!::)},
 	@typeListMisordered,
 );
 
