@@ -500,6 +500,36 @@ our $custom_tags = qr{(?x:
 	NO_CHANGELOG
 )};
 
+our $github_ref = qr{(https?:\/\/)?(www\.)?github\.com\b([-a-zA-Z0-9()@:%_\+.~\#?&\/=]*)};
+our $github_issue_ref = qr{((tarantool\/\S+)?\#[1-9][0-9]*)};
+
+our $github_issue_markers = qr{(?x:
+	Close|
+	Closes|
+	Part\s+of|
+	Part-of|
+	Issue|
+	Follow\s+up|
+	Follows\s+up|
+	Follow-up|
+	Follows-up|
+	Needed\s+for|
+	Needed-for|
+	Fix|
+	Fixes|
+	Fixed|
+	See|
+	See\s+also|
+	See-also|
+	Related\s+to|
+	Related-to|
+	Related|
+	Relates|
+	Workaround|
+	Implement|
+	Implements
+)};
+
 sub edit_distance_min {
 	my (@arr) = @_;
 	my $len = scalar @arr;
@@ -2722,6 +2752,10 @@ sub process {
 				ERROR("TAG_IN_DOC",
 				      "Please move $1 tag before doc request\n");
 			}
+		}
+		if ($in_commit_log && $has_doc && $line =~ /^($github_issue_markers)\s*:?\s*($github_issue_ref|$github_ref)/) {
+			ERROR("ISSUE_IN_DOC",
+			      "Please move \"$line\" issue reference before doc request\n");
 		}
 		if ($in_commit_log && $line =~ /^\@TarantoolBot document$/) {
 			$has_doc = 1;
