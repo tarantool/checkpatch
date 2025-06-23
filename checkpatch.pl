@@ -608,6 +608,7 @@ our @typeListMisordered = (
 );
 
 our @typeList = (
+	qr{auto},
 	qr{void},
 	qr{(?:(?:un)?signed\s+)?char},
 	qr{(?:(?:un)?signed\s+)?short\s+int},
