@@ -500,6 +500,10 @@ our $custom_tags = qr{(?x:
 	NO_CHANGELOG
 )};
 
+our $custom_tags_no_reason = qr{(?x:
+	NO_DEPS_UPDATE
+)};
+
 our $github_ref = qr{(https?:\/\/)?(www\.)?github\.com\b([-a-zA-Z0-9()@:%_\+.~\#?&\/=]*)};
 our $github_issue_ref = qr{((tarantool\/\S+)?\#[1-9][0-9]*)};
 
@@ -2156,6 +2160,8 @@ sub process {
 	my $new_file = 0;
 	my $has_doc = 0;
 	my $has_test = 0;
+	my $need_deps_update = 0;
+	my $has_deps_update = 0;
 	my $is_test = 0;
 
 	# Pre-scan the patch sanitizing the lines.
@@ -2747,7 +2753,8 @@ sub process {
 			}
 		}
 
-		if ($in_commit_log && $line =~ /^($custom_tags)=/) {
+		if ($in_commit_log && ($line =~ /^($custom_tags)=/ ||
+		    $line =~ /^($custom_tags_no_reason)$/)) {
 			$commit_log_tags{$1} = 1;
 			if ($has_doc) {
 				ERROR("TAG_IN_DOC",
@@ -2766,6 +2773,12 @@ sub process {
 		}
 		if ($realfile =~ /^(?:static-build\/)?test\/.*\//) {
 			$has_test = 1;
+		}
+		if ($realfile =~ /^(?:third_party|cmake|CMakeLists\.txt)\//) {
+			$need_deps_update = 1;
+		}
+		if ($realfile =~ /^extra\/dependencies\.yaml/) {
+			$has_deps_update = 1;
 		}
 
 		$is_test = ($realfile =~ /^(?:test|perf)\//);
@@ -5292,6 +5305,11 @@ sub process {
 		if (!$has_test && !exists($commit_log_tags{'NO_TEST'})) {
 			ERROR("NO_TEST",
 			      "Please add test or NO_TEST=<reason> tag\n");
+		}
+		if ($need_deps_update && !exists($commit_log_tags{'NO_DEPS_UPDATE'}) &&
+		    !$has_deps_update) {
+			ERROR("NO_DEPS_UPDATE",
+			      "Please update extra/dependencies.yaml or add NO_DEPS_UPDATE tag\n");
 		}
 	}
 

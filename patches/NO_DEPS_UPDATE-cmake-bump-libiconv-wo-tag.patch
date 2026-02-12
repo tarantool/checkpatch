@@ -1,0 +1,29 @@
+From a94e1cb47943b508e94793570a3b760558cd89c5 Mon Sep 17 00:00:00 2001
+Message-ID: <a94e1cb47943b508e94793570a3b760558cd89c5.1771339327.git.sergeyb@tarantool.org>
+In-Reply-To: <cover.1771339327.git.sergeyb@tarantool.org>
+References: <cover.1771339327.git.sergeyb@tarantool.org>
+From: Sergey Bronnikov <sergeyb@tarantool.org>
+Date: Tue, 17 Feb 2026 17:39:34 +0300
+Subject: [PATCH luajit 1/3] cmake: bump libiconv wo tag
+To: tarantool-patches@dev.tarantool.org, Sergey Kaplun <skaplun@tarantool.org>, Maxim Kokryashkin <m.kokryashkin@tarantool.org>
+
+NO_CHANGELOG=internal
+NO_DOC=internal
+NO_TEST=internal
+---
+ cmake/BuildICONV.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/BuildICONV.cmake b/cmake/BuildICONV.cmake
+index 5a417aabe6..bd2ae84aeb 100644
+--- a/cmake/BuildICONV.cmake
++++ b/cmake/BuildICONV.cmake
+@@ -1,4 +1,4 @@
+-set(ICONV_VERSION 1.17)
++set(ICONV_VERSION 1.18)
+ set(ICONV_HASH d718cd5a59438be666d1575855be72c3)
+ set(ICONV_INSTALL_DIR ${BUNDLED_LIBS_INSTALL_DIR}/iconv-prefix)
+ set(ICONV_INCLUDE_DIR ${ICONV_INSTALL_DIR}/include)
+-- 
+2.43.0
+
