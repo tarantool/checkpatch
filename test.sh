@@ -27,5 +27,8 @@ run_test() {
 
 run_test 0 "patches/test1.patch"
 run_test 0 "patches/test2.patch"
+run_test 0 "patches/NO_DEPS_UPDATE-cmake-bump-libiconv-with-dependencies.yaml.patch"
+run_test 0 "patches/NO_DEPS_UPDATE-cmake-bump-libiconv-with-tag.patch"
+run_test 1 "patches/NO_DEPS_UPDATE-cmake-bump-libiconv-wo-tag.patch"
 
 exit $suite_status

@@ -766,6 +766,13 @@ Others
     If the patch doesn't need a test (e.g. it fixes a CI issue), please add
     NO_TEST=<reason> to the commit log.
 
+  **NO_DEPS_UPDATE**
+    The patch updates files that may describe external dependencies of the
+    project.  If it does introduce a new build dependency or updates the version
+    of an existing build dependency, please update extra/dependencies.yaml
+    accordingly, otherwise add NO_DEPS_UPDATE to the commit log to suppress
+    this warning.
+
   **NOT_UNIFIED_DIFF**
     The patch file does not appear to be in unified-diff format.  Please
     regenerate the patch file before sending it to the maintainer.

@@ -1,0 +1,47 @@
+From 5a069205996251713a3a87a4f996a9d7df152e71 Mon Sep 17 00:00:00 2001
+Message-ID: <5a069205996251713a3a87a4f996a9d7df152e71.1771339327.git.sergeyb@tarantool.org>
+In-Reply-To: <cover.1771339327.git.sergeyb@tarantool.org>
+References: <cover.1771339327.git.sergeyb@tarantool.org>
+From: Sergey Bronnikov <sergeyb@tarantool.org>
+Date: Tue, 17 Feb 2026 17:40:52 +0300
+Subject: [PATCH luajit 2/3] cmake: bump libiconv with dependencies.yaml
+To: tarantool-patches@dev.tarantool.org, Sergey Kaplun <skaplun@tarantool.org>, Maxim Kokryashkin <m.kokryashkin@tarantool.org>
+
+Fixes #
+Closes #
+Needed for #
+See also #
+
+NO_CHANGELOG=internal
+NO_DOC=internal
+NO_TEST=internal
+---
+ cmake/BuildICONV.cmake  | 2 +-
+ extra/dependencies.yaml | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/cmake/BuildICONV.cmake b/cmake/BuildICONV.cmake
+index bd2ae84aeb..64df3b11d4 100644
+--- a/cmake/BuildICONV.cmake
++++ b/cmake/BuildICONV.cmake
+@@ -1,4 +1,4 @@
+-set(ICONV_VERSION 1.18)
++set(ICONV_VERSION 1.19)
+ set(ICONV_HASH d718cd5a59438be666d1575855be72c3)
+ set(ICONV_INSTALL_DIR ${BUNDLED_LIBS_INSTALL_DIR}/iconv-prefix)
+ set(ICONV_INCLUDE_DIR ${ICONV_INSTALL_DIR}/include)
+diff --git a/extra/dependencies.yaml b/extra/dependencies.yaml
+index 5a254120d5..b33ee47f91 100644
+--- a/extra/dependencies.yaml
++++ b/extra/dependencies.yaml
+@@ -11,7 +11,7 @@ dependencies:
+   - libcurl:
+     version: 461ce6c6160b86439ddd74c59541231ec9e8558e (curl-8_10_1-241-g461ce6c61)
+   - libiconv:
+-    version: 1.17
++    version: 1.19
+   - libicu:
+     version: 71.1
+   - libncurses:
+--
+2.43.0
