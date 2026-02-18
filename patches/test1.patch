@@ -1,0 +1,43 @@
+commit 2508bd8c3c1bdba7f19bcbac2eca9eb8d33ba87c
+Author: Sergey Bronnikov <sergeyb@tarantool.org>
+Date:   Fri Sep 2 09:59:54 2022 +0300
+
+    test: new unit test with result file
+    
+    NO_CHANGELOG=internal
+    NO_DOC=internal
+    NO_TEST=internal
+
+diff --git a/test/unit/ratelimit1.c b/test/unit/ratelimit1.c
+new file mode 100644
+index 0000000000..ce51bf7c28
+--- /dev/null
++++ b/test/unit/ratelimit1.c
+@@ -0,0 +1,16 @@
++#include <time.h>
++
++#include "unit.h"
++#include "ratelimit.h"
++
++int
++main()
++{
++	header();
++	plan(10);
++
++	check_plan();
++	footer();
++
++	return 0;
++}
+diff --git a/test/unit/ratelimit1.result b/test/unit/ratelimit1.result
+new file mode 100644
+index 0000000000..eb06d8b98e
+--- /dev/null
++++ b/test/unit/ratelimit1.result
+@@ -0,0 +1,5 @@
++	*** main ***
++1..10
++ok 1 - emitted 10 expected 10
++ok 2 - suppressed 0 expected 0
++	*** main: done ***
